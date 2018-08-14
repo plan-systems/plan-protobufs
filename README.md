@@ -54,7 +54,7 @@ For more info and docs:
 
 ## About PLAN
 
-PLAN is an all-in-one visual communication and organizational tool for real-world communities and individuals.  
+PLAN is a free, open source, all-in-one visual communication and organizational tool for real-world communities and individuals.  
 
 http://plan.tools/
 
