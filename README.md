@@ -46,7 +46,7 @@ Specifcally, this repo generates:
     
     `*.go`  -->  `plan-tools/go-plan/pservice`
 
-For more info and docs:
+More gRPC info and docs:
    * https://grpc.io/docs/quickstart/csharp.html
    * https://grpc.io/docs/tutorials/basic/csharp.html
    * https://grpc.io/docs/tutorials/basic/go.html
