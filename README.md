@@ -38,7 +38,7 @@ Specifcally, this repo generates:
       https://github.com/gogo/protobuf/
     
 
-3. Execute `./protoc-all.sh`
+3. Execute `./build-all.sh`
 
 4. Move the output files to their repsective project homes:
 
