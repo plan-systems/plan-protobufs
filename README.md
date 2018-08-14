@@ -1,6 +1,6 @@
 # plan-protobuf
 
-This repo contains PLAN's protobuf-based data structures and gRPC messages.  The .proto files found in this repo are used to auto-generate serialization and gRPC source code used in other PLAN projects.  
+This repo contains PLAN's protobuf-based data structures and gRPC messages.  The .proto file found in this repo is used to auto-generate serialization and gRPC source code used in other PLAN projects.  
 
 Specifcally, this repo generates:
  * C# code for PLAN's Unity-based client
