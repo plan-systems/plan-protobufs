@@ -1,5 +1,5 @@
 
-// See $GOPATH/src/github.com/plan-tools/go-plan/pservice/compile_proto.sh
+// See plan-protobuf/README.md
 
 
 syntax = "proto3";
