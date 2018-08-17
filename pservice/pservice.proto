@@ -36,14 +36,13 @@ message StatusReply {
 
 message ClientInfo {
                 bytes           community_id            = 1;
-                bytes           user_id                 = 2;
-                string          token_prev              = 3;
+                bytes           member_id               = 2;
+                bytes           workstation_id          = 3;
 }
 
 
 message SessionInfo {
                 string          session_token           = 1;
-                int64           token_expire_time       = 2;
 }
 
 
