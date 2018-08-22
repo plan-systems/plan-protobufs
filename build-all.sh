@@ -35,3 +35,8 @@ $protoc --proto_path=$proto_dir  --gofast_out=plugins=grpc:$proto_dir           
 #$protoc --proto_path=$proto_dir  --go_out=plugins=grpc:$proto_dir                                                                      $proto_file
 
 $protoc --proto_path=$proto_dir  --csharp_out $proto_dir --grpc_out $proto_dir --plugin=protoc-gen-grpc=$GRPC_DIR/grpc_csharp_plugin   $proto_file
+
+
+if [ "$1" == "-mv" ]; then
+    mv "$proto_dir/pservice.pb.go" "$THIS_DIR/../go-plan/pservice/"
+fi
