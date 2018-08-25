@@ -38,13 +38,11 @@ Specifcally, this repo generates:
       https://github.com/gogo/protobuf/
     
 
-3. Execute `./build-all.sh`
+3. Execute `./build-protobufs.sh` (this compiles each `.proto` file)  
 
-4. Move the output files to their repsective project homes:
+4. The output `.go` files will already be properly placed in `go-plan`, but you must move:
 
     `*.cs`  -->  `plan-tools/unity-client/PLAN-Unity/Assets/src/Protobufs+gRPC`
-    
-    `*.go`  -->  `plan-tools/go-plan/pservice`
 
 More **gRPC** info and docs:
    * https://grpc.io/docs/quickstart/csharp.html
