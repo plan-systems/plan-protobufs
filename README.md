@@ -48,7 +48,7 @@ Specifcally, this process generates:
 7. Pick up your lambo
 
 
-GEtting started with **gRPC**:
+Getting started with **gRPC**:
    * https://grpc.io/docs/quickstart/csharp.html
    * https://grpc.io/docs/tutorials/basic/csharp.html
    * https://grpc.io/docs/tutorials/basic/go.html
