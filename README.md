@@ -10,37 +10,43 @@ Specifcally, this repo generates:
 
 ### Build Flow
 
-1. Install **Gprc.Tools** (and C# plugin):
+1. Set up **Gprc.Tools** (and C# plugin):
     1. Download the latest nuget package:
     
          https://www.nuget.org/packages/Grpc.Tools/
       
     2. Unzip the nuget pkg zip file using unzip. 
     
-        `unzip grpc.tools.1.14.1.nupkg -d Grpc.Tools`
+        `unzip grpc.tools.1.14.1.nupkg -d $GOPATH/src/github.com/plan-tools/plan-protobuf/Grpc.Tools`
         
-        *Note: macOS's default unarchiver doesn't expand `.nupkg` file names properly*
-        
-    3. Move `Grpc.Tools` into `plan-tools/plan-protobuf/` if not already there.
-    
-    4. Add execute permissions:
-    
-         `chmod +x plan-tools/plan-protobuf/Grpc.Tools/tools/macosx_64/*`
-          
-         `chmod +x plan-tools/plan-protobuf/Grpc.Tools/tools/linux_x64/*`
-         
-4. Install gogo protobufs 
+        (macOS's default unarchiver doesn't restore `.nupkg` filenames properly)
+                
+    3. Add execute permissions:
+         ```
+         chmod +x plan-protobuf/Grpc.Tools/tools/macosx_64/*
+         chmod +x plan-protobuf/Grpc.Tools/tools/linux_x64/*
+         ```
+       
+2. Ensure your `$PATH` contains Go's `bin` directory, e.g. `PATH="${GOPATH}/bin:${PATH}"`
+
+3. Install **gogo protobufs** 
 
      `go get github.com/gogo/protobuf/protoc-gen-gofast`
 
       https://github.com/gogo/protobuf/
-    
+     
+4. Install **grpc**
 
-3. Execute `./build-protobufs.sh` (this compiles each `.proto` file)  
+     `go get google.golang.org/grpc`
 
-4. The output `.go` files will already be properly placed in `go-plan`, but you must move:
+5. Execute `./build-protobufs.sh` (this compiles each `.proto` file)  
 
-    `*.cs`  -->  `plan-tools/unity-client/PLAN-Unity/Assets/src/Protobufs+gRPC`
+6. The output `.go` files will already be properly placed in `go-plan`, but you must move:
+
+    `*.cs`   ->   `plan-tools/unity-client/PLAN-Unity/Assets/src/Protobufs+gRPC`
+
+7. Pick up your lambo
+
 
 More **gRPC** info and docs:
    * https://grpc.io/docs/quickstart/csharp.html
