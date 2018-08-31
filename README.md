@@ -37,9 +37,11 @@ Specifcally, this repo generates:
 
      `go get google.golang.org/grpc`
 
-5. Execute `./build-protobufs.sh` (this compiles each PLAN `.proto` file)  
+5. Compile PLAN's `.proto` files
 
-6. The output `.go` files will already be properly placed in `go-plan`, but you must move:
+     `./build-protobufs.sh`
+
+6. The script also moves the output `.go` files to `go-plan`, but you must move:
 
     `*.cs`   ->   `plan-tools/unity-client/PLAN-Unity/Assets/src/Protobufs+gRPC`
 
@@ -54,14 +56,14 @@ GEtting started with **gRPC**:
 
 ## About PLAN
 
-PLAN is a free, open source, all-in-one visual communication and organizational tool for real-world communities and individuals.  
+PLAN is a free, open source, all-in-one visual communication and organizational tool for communities and individuals.  
 
 http://plan.tools/
 
 
 ## Acknolwedgements
 
-Special thanks to Google for making the protobuf toolchain FOSS.  Community-oriented software matters.
+Special thanks to Google for making the protobuf toolchain FOSS.  Unencumbered community-available software matters.
 
 
 ## License
