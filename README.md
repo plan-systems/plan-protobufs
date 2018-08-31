@@ -1,10 +1,10 @@
 # plan-protobuf
 
-This repo contains PLAN's protobuf-based data structures and gRPC messages.  The .proto file found in this repo is used to auto-generate serialization and gRPC source code used in other PLAN projects.  
+PLAN uses [protobuf](https://developers.google.com/protocol-buffers/)-based data structures and gRPC messages.  This repo hosts a shell script `build-protobufs.sh` that invokes `protoc` (the protobuf compiler) on PLAN's .proto files.  It auto-generates serialization and gRPC source code used in other PLAN projects.   
 
 Specifcally, this repo generates:
- * C# code for PLAN's Unity-based client
- * Go code for pnode, PLAN's go-based p2p server node. 
+ * C# code for PLAN's Unity-based client, `plan-tools/unity-clent`
+ * Go code for PLAN's go-based p2p server node, `plan-tools/go-plan`
 
 
 
@@ -29,17 +29,15 @@ Specifcally, this repo generates:
        
 2. Ensure your `$PATH` contains Go's `bin` directory, e.g. `PATH="${GOPATH}/bin:${PATH}"`
 
-3. Install **gogo protobufs** 
+3. Install [gogo protobufs](https://github.com/gogo/protobuf/)
 
      `go get github.com/gogo/protobuf/protoc-gen-gofast`
-
-      https://github.com/gogo/protobuf/
      
-4. Install **grpc**
+4. Install [gRPC](https://grpc.io/)
 
      `go get google.golang.org/grpc`
 
-5. Execute `./build-protobufs.sh` (this compiles each `.proto` file)  
+5. Execute `./build-protobufs.sh` (this compiles each PLAN `.proto` file)  
 
 6. The output `.go` files will already be properly placed in `go-plan`, but you must move:
 
@@ -48,7 +46,7 @@ Specifcally, this repo generates:
 7. Pick up your lambo
 
 
-More **gRPC** info and docs:
+GEtting started with **gRPC**:
    * https://grpc.io/docs/quickstart/csharp.html
    * https://grpc.io/docs/tutorials/basic/csharp.html
    * https://grpc.io/docs/tutorials/basic/go.html
