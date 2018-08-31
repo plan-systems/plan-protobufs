@@ -25,9 +25,9 @@ Specifcally, this repo generates:
     
     4. Add execute permissions:
     
-         `cd plan-tools/plan-protobuf/Grpc.Tools/tools/`
-         
-         `chmod +x macosx_x64/*` or  `chmod +x linux_x64/*`
+         `chmod +x plan-tools/plan-protobuf/Grpc.Tools/tools/macosx_64/*`
+          
+         `chmod +x plan-tools/plan-protobuf/Grpc.Tools/tools/linux_x64/*`
          
 4. Install gogo protobufs 
 
