@@ -48,7 +48,7 @@ do
     echo "Compiling: $proto_file"
 
     # also suggested: -I=$GOPATH/src/github.com/gogo/protobuf/protobuf
-    $protoc -I=$proto_dir  -I="$GOPATH/src" --gofast_out=plugins=grpc:$proto_dir                                                                        $proto_file
+    $protoc -I=$proto_dir  -I="$GOPATH/src" --gofast_out=plugins=grpc:$proto_dir $proto_file
 
     $protoc -I=$proto_dir  -I="$GOPATH/src" --csharp_out "$csharp_out" --grpc_out "$csharp_out" --plugin=protoc-gen-grpc=$GRPC_DIR/grpc_csharp_plugin   $proto_file
 
