@@ -27,9 +27,7 @@ Specifcally, this repo generates:
     
          `cd plan-tools/plan-protobuf/Grpc.Tools/tools/`
          
-         `chmod +x macosx_x64/*`
-         
-         `chmod +x linux_x64/*`
+         `chmod +x macosx_x64/*` or  `chmod +x linux_x64/*`
          
 4. Install gogo protobufs 
 
