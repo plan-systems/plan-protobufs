@@ -2,11 +2,15 @@
 #!/bin/sh
 
 
+
+
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 #
 #
-# See plan-tools/plan-protobuf/README.md for info!
+# See:
+#    plan-tools/plan-protobuf/README.md 
+#    http://plan.tools
 #
 #
 
