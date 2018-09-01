@@ -32,7 +32,7 @@ echo
 #$protoc --proto_path=$proto_dir  --go_out=plugins=grpc:$proto_dir                                                                      $proto_file
 
 
-declare -a arr=("pdi" "ski" "pservice")
+declare -a arr=("plan" "ski" "pdi" "pservice")
 
 template="$THIS_DIR/../go-plan/zzzPKGzzz"
 
