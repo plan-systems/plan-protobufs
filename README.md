@@ -17,13 +17,13 @@ Specifcally, this process generates:
       
     2. Unzip the nuget pkg zip file using unzip. 
     
-        `unzip grpc.tools.1.14.1.nupkg -d $GOPATH/src/github.com/plan-tools/plan-protobuf/Grpc.Tools`
+        `unzip grpc.tools.1.15.0.nupkg -d $GOPATH/src/github.com/plan-tools/plan-protobuf/Grpc.Tools`
         
         (macOS's default unarchiver doesn't restore `.nupkg` filenames properly)
                 
     3. Add execute permissions:
          ```
-         chmod +x plan-protobuf/Grpc.Tools/tools/macosx_64/*
+         chmod +x plan-protobuf/Grpc.Tools/tools/macosx_x64/*
          chmod +x plan-protobuf/Grpc.Tools/tools/linux_x64/*
          ```
        
