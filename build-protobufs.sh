@@ -2,11 +2,15 @@
 #!/bin/sh
 
 
+
+
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 #
 #
-# See plan-tools/plan-protobuf/README.md for info!
+# See:
+#    plan-tools/plan-protobuf/README.md 
+#    http://plan.tools
 #
 #
 
@@ -46,11 +50,15 @@ do
     proto_file="$i.proto"
 
     echo "Compiling: $proto_file"
-    $protoc --proto_path=$proto_dir  --proto_path="$GOPATH/src" --gofast_out=plugins=grpc:$proto_dir                                                                  $proto_file
 
-    $protoc --proto_path=$proto_dir  --proto_path="$GOPATH/src" --csharp_out "$csharp_out" --grpc_out "$csharp_out" --plugin=protoc-gen-grpc=$GRPC_DIR/grpc_csharp_plugin   $proto_file
+    # also suggested: -I=$GOPATH/src/github.com/gogo/protobuf/protobuf
+    $protoc -I=$proto_dir  -I="$GOPATH/src" --gofast_out=plugins=grpc:$proto_dir $proto_file
+
+    $protoc -I=$proto_dir  -I="$GOPATH/src" --csharp_out "$csharp_out" --grpc_out "$csharp_out" --plugin=protoc-gen-grpc=$GRPC_DIR/grpc_csharp_plugin   $proto_file
 
 done
+
+
 
 
 
