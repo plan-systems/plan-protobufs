@@ -41,9 +41,9 @@ Specifcally, this process generates:
 
      `./build-protobufs.sh`
 
-6. The script also moves the output `.go` files to `go-plan`, but you must move:
+6. The script also moves the output `.go` files to `go-plan`, but you must also move:
 
-    `*.cs`   ->   `plan-tools/unity-client/PLAN-Unity/Assets/src/Protobufs+gRPC`
+    `*.cs`   ->   `plan-tools/plan-unity/Assets/src/Protobufs+gRPC/`
 
 7. Pick up your new lambo
 
