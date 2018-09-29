@@ -1,6 +1,6 @@
 # plan-protobuf
 
-[PLAN](http://plan.tools) uses [Protocol Buffers](https://developers.google.com/protocol-buffers/)-based data structures and gRPC messages.  This repo hosts the script `build-protobufs.sh` that invokes `protoc` (the protobuf compiler) on PLAN's `.proto` files.  The script auto-generates serialization and gRPC source code used in other PLAN projects.   
+[PLAN](http://plan.tools) uses [Protocol Buffers](https://developers.google.com/protocol-buffers/) and [gRPC](https://grpc.io/) messages and services.  This repo hosts the script `build-protobufs.sh` that invokes `protoc` (the protobuf compiler) on each of PLAN's `.proto` files.  The script auto-generates serialization and gRPC source code used in other PLAN projects.   
 
 Specifcally, this process generates:
  * C# code for PLAN's Unity-based client, `plan-tools/plan-unity`
