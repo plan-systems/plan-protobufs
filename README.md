@@ -1,4 +1,4 @@
-# plan-protobuf
+# plan-protobufs
 
 [PLAN](http://plan.tools) uses [Protocol Buffers](https://developers.google.com/protocol-buffers/) and [gRPC](https://grpc.io/) messages and services.  This repo hosts the script `build-protobufs.sh` that invokes `protoc` (the protobuf compiler) on each of PLAN's `.proto` files.  The script auto-generates serialization and gRPC source code used in other PLAN projects.   
 
