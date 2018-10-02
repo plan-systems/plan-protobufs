@@ -7,7 +7,7 @@
 P  L  A  N etwork
 ```
 
-PLAN is an multi-purpose communications and logistics planning tool for individuals and organizations. 
+[PLAN](http://plan.tools) is an multi-purpose communications and logistics planning tool for individuals and organizations. 
 
 # plan-protobufs
 
