@@ -29,23 +29,24 @@ echo
 echo "Using:" `$protoc --version`
 echo
 
-
-#proto_file="pservice.proto"
-#echo "Compiling: $proto_file"
-#$protoc --proto_path=$proto_dir  --gofast_out=plugins=grpc:$proto_dir                                                                  $proto_file
-#$protoc --proto_path=$proto_dir  --go_out=plugins=grpc:$proto_dir                                                                      $proto_file
-
-
-declare -a arr=("plan" "ski" "pdi" "pservice")
+# List of .proto file dirs to prcoess
+declare -a PROTO_FILES=(    \
+"plan"                      \
+"ski"                       \
+"pdi"                       \
+"pservice"                  \
+)
 
 template="$THIS_DIR/../go-plan/zzzPKGzzz"
 
 csharp_out="$THIS_DIR/unity-client/"
 mkdir -p "$csharp_out"
 
-## now loop through the above array
-for i in "${arr[@]}"
+# Generate language-specific source files for each .proto file
+for i in "${PROTO_FILES[@]}"
 do
+
+    # Use find/replace magic to come up with the relative pathname for the .proto file
     proto_dir="${template/zzzPKGzzz/$i}"  
     proto_file="$i.proto"
 
