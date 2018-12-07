@@ -9,8 +9,8 @@ THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 #
 #
 # See:
-#    plan-tools/plan-protobuf/README.md 
-#    http://plan.tools
+#    plan-systems/plan-protobuf/README.md 
+#    http://plan-systems.org
 #
 #
 
