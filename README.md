@@ -26,15 +26,17 @@ Specifically, this process generates:
     
          https://www.nuget.org/packages/Grpc.Tools/
       
-    2. Unzip the nuget pkg zip file using unzip. _Don't use macOS's default unarchiver since it does not restore `.nupkg` filenames properly._
+    2. Unzip the nuget pkg zip file using unzip. 
+    
+       _Don't use macOS's default unarchiver since it does not restore `.nupkg` filenames properly._
     
         `unzip grpc.tools.1.15.0.nupkg -d $GOPATH/src/github.com/plan-systems/plan-protobufs/Grpc.Tools`        
                 
     3. Add execute permissions:
-         ```
-         chmod +x plan-protobufs/Grpc.Tools/tools/macosx_x64/*
-         chmod +x plan-protobufs/Grpc.Tools/tools/linux_x64/*
-         ```
+        ```
+        chmod +x plan-protobufs/Grpc.Tools/tools/macosx_x64/*
+        chmod +x plan-protobufs/Grpc.Tools/tools/linux_x64/*
+        ```
        
 2. Ensure your `$PATH` contains Go's `bin` directory, e.g. `PATH="${GOPATH}/bin:${PATH}"`
 
