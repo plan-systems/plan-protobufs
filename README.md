@@ -26,37 +26,35 @@ Specifically, this process generates:
     
          https://www.nuget.org/packages/Grpc.Tools/
       
-    2. Unzip the nuget pkg zip file using unzip. 
+    2. Unzip the nuget pkg zip file using unzip. _Don't use macOS's default unarchiver since it does not restore `.nupkg` filenames properly._
     
-        `unzip grpc.tools.1.15.0.nupkg -d $GOPATH/src/github.com/plan-systems/plan-protobuf/Grpc.Tools`
-        
-        (macOS's default unarchiver doesn't restore `.nupkg` filenames properly)
+        `unzip grpc.tools.1.15.0.nupkg -d $GOPATH/src/github.com/plan-systems/plan-protobufs/Grpc.Tools`        
                 
     3. Add execute permissions:
          ```
-         chmod +x plan-protobuf/Grpc.Tools/tools/macosx_x64/*
-         chmod +x plan-protobuf/Grpc.Tools/tools/linux_x64/*
+         chmod +x plan-protobufs/Grpc.Tools/tools/macosx_x64/*
+         chmod +x plan-protobufs/Grpc.Tools/tools/linux_x64/*
          ```
        
 2. Ensure your `$PATH` contains Go's `bin` directory, e.g. `PATH="${GOPATH}/bin:${PATH}"`
 
-3. Install [gogo protobufs](https://github.com/gogo/protobuf/)
+3. Install [gogo protobufs](https://github.com/gogo/protobuf/):
 
      `go get github.com/gogo/protobuf/protoc-gen-gofast`
      
-4. Install [gRPC](https://grpc.io/)
+4. Install [gRPC](https://grpc.io/):
 
      `go get google.golang.org/grpc`
 
-5. Compile PLAN's `.proto` files
+5. Compile PLAN's `.proto` files:
 
      `./build-protobufs.sh`
 
-6. The script also moves the output `.go` files to `go-plan`, but you must also move:
+6. For convenience, the above script moves the newly generated `.go` files into the right places within [go-plan](https://github.com/plan-systems/go-plan).  If you are building [plan-unity](https://github.com/plan-systems/plan-unity), then you must move the generated `.cs` files into:
 
-    `*.cs`   ->   `plan-systems/plan-unity/Assets/src/Protobufs+gRPC/`
+    `plan-systems/plan-unity/Assets/src/Protobufs+gRPC/`
 
-7. Pick up your new lambo
+7. Pick up your new lambo.
 
 
 Getting started with **gRPC**:
