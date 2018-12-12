@@ -30,7 +30,7 @@ Specifically, this process generates:
     
        _Don't use macOS's default unarchiver since it does not restore `.nupkg` filenames properly._
     
-        `unzip grpc.tools.1.15.0.nupkg -d $GOPATH/src/github.com/plan-systems/plan-protobufs/Grpc.Tools`        
+        `unzip grpc.tools.1.16.0.nupkg -d $GOPATH/src/github.com/plan-systems/plan-protobufs/Grpc.Tools`        
                 
     3. Add execute permissions:
         ```
@@ -55,6 +55,11 @@ Specifically, this process generates:
 6. For convenience, the above script moves the newly generated `.go` files into the right places within [go-plan](https://github.com/plan-systems/go-plan).  If you are building [plan-unity](https://github.com/plan-systems/plan-unity), then you must move the generated `.cs` files into:
 
     `plan-systems/plan-unity/Assets/src/Protobufs+gRPC/`
+    
+    I use a symbolic link to have newly output files automatically go to the right place:
+
+    `ln -s /Users/moi/plan-unity/Assets/src/Protobufs+gRPC $GOPATH/src/github.com/plan-systems/plan-protobufs/unity-client`
+
 
 7. Pick up your new lambo.
 
