@@ -42,13 +42,22 @@ template="$THIS_DIR/../go-plan/zzzPKGzzz"
 csharp_out="$THIS_DIR/unity-client/"
 mkdir -p "$csharp_out"
 
-# Generate language-specific source files for each .proto file
-for i in "${PROTO_FILES[@]}"
-do
 
-    # Use find/replace magic to come up with the relative pathname for the .proto file
-    proto_dir="${template/zzzPKGzzz/$i}"  
-    proto_file="$i.proto"
+PROTO_FILES=(                       \
+    "plan/plan.proto"               \
+    "ski/ski.proto"                 \
+    "pdi/pdi.proto"                 \
+    "pservice/pservice.proto"       \
+)
+NUM_FILES=$(( ${#PROTO_FILES[@]} ))
+
+
+# Generate language-specific source files for each .proto file
+for (( i=0; i<$NUM_FILES; i++ ));
+do
+    pathname="${template/zzzPKGzzz/${PROTO_FILES[$i]}}"
+    proto_dir=$(dirname  ${pathname})
+    proto_file=$(basename ${pathname})
 
     echo "Compiling: $proto_file"
 
