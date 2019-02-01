@@ -15,15 +15,23 @@ THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 #
 
 
-GRPC_DIR="$THIS_DIR/Grpc.Tools/tools/macosx_x64"
-protoc="$GRPC_DIR/protoc"
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    BIN_DIR="$THIS_DIR/Grpc.Tools/tools/linux_x64"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    BIN_DIR="$THIS_DIR/Grpc.Tools/tools/macosx_x64"
+else
+    echo "Unknown environment"
+    exit
+fi
+
+protoc="$BIN_DIR/protoc"
 
 proto_file="pservice.proto"
 
 echo
 echo
 echo "\$THIS_DIR=$THIS_DIR"
-echo "\$GRPC_DIR=$GRPC_DIR"
+echo "\$BIN_DIR=$BIN_DIR"
 echo "  \$protoc=$protoc"
 echo
 echo "Using:" `$protoc --version`
@@ -64,7 +72,7 @@ do
     # also suggested: -I=$GOPATH/src/github.com/gogo/protobuf/protobuf
     $protoc -I=$proto_dir  -I="$GOPATH/src" --gofast_out=plugins=grpc:$proto_dir $proto_file
 
-    $protoc -I=$proto_dir  -I="$GOPATH/src" --csharp_out "$csharp_out" --grpc_out "$csharp_out" --plugin=protoc-gen-grpc=$GRPC_DIR/grpc_csharp_plugin   $proto_file
+    $protoc -I=$proto_dir  -I="$GOPATH/src" --csharp_out "$csharp_out" --grpc_out "$csharp_out" --plugin=protoc-gen-grpc=$BIN_DIR/grpc_csharp_plugin   $proto_file
 
 done
 
