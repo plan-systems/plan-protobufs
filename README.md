@@ -24,7 +24,7 @@ Specifically, this process generates:
 1. Set up **Gprc.Tools** (and C# plugin):
     1. Download the latest nuget package:
     
-         https://www.nuget.org/packages/Grpc.Tools/
+        https://www.nuget.org/packages/Grpc.Tools/
       
     2. Unzip the nuget pkg zip file using unzip. 
     
@@ -42,11 +42,11 @@ Specifically, this process generates:
 
 3. Install [gogo protobufs](https://github.com/gogo/protobuf/):
 
-     `go get github.com/gogo/protobuf/protoc-gen-gofast`
+     `go get -u github.com/gogo/protobuf/protoc-gen-gofast`
      
 4. Install [gRPC](https://grpc.io/):
 
-     `go get google.golang.org/grpc`
+     `go get -u google.golang.org/grpc`
 
 5. Compile PLAN's `.proto` files:
 
