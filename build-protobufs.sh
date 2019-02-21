@@ -31,7 +31,7 @@ proto_file="pservice.proto"
 echo
 echo
 echo "\$THIS_DIR=$THIS_DIR"
-echo "\$BIN_DIR=$BIN_DIR"
+echo " \$BIN_DIR=$BIN_DIR"
 echo "  \$protoc=$protoc"
 echo
 echo "Using:" `$protoc --version`
