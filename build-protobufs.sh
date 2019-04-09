@@ -55,7 +55,7 @@ PROTO_FILES=(                       \
     "plan/plan.proto"               \
     "ski/ski.proto"                 \
     "pdi/pdi.proto"                 \
-    "pservice/pservice.proto"       \
+    "repo/repo.proto"               \
 )
 NUM_FILES=$(( ${#PROTO_FILES[@]} ))
 
