@@ -37,14 +37,6 @@ echo
 echo "Using:" `$protoc --version`
 echo
 
-# List of .proto file dirs to prcoess
-declare -a PROTO_FILES=(    \
-"plan"                      \
-"ski"                       \
-"pdi"                       \
-"pservice"                  \
-)
-
 template="$THIS_DIR/../go-plan/zzzPKGzzz"
 
 csharp_out="$THIS_DIR/unity-client/"
@@ -56,6 +48,7 @@ PROTO_FILES=(                       \
     "ski/ski.proto"                 \
     "pdi/pdi.proto"                 \
     "repo/repo.proto"               \
+    "client/client.proto"           \
 )
 NUM_FILES=$(( ${#PROTO_FILES[@]} ))
 
