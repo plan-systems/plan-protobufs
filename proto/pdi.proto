@@ -26,9 +26,8 @@ Un the StorageProvider model (as with a conventional blockchain model) trust is 
 to outside the system by use of StorageProvider-maintained units of account: 
     (1) Kb - Number of kilobytes of txn data a given address (account) can post.
     (2) Op - Number of "operations" a given address can perform.  Posting a new txn costs 1 Op.
-These units of account are solely a mechanism for controlling who has append access to the community's shared data store.
-
-Also see go-plan/pdi/StorageProvider.go. */
+These units of account are solely a mechanism for controlling who has append access to the community's store and is
+generally managed via the standard procedures for admitting new members.*/
 service StorageProvider {
 
     // Starts a new client session.

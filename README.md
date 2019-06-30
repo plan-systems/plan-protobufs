@@ -14,8 +14,8 @@ P  L  A  N etwork
 PLAN uses [Protocol Buffers](https://developers.google.com/protocol-buffers/) and [gRPC](https://grpc.io/) messages and services.  This repo hosts the script `build-protobufs.sh` that invokes `protoc` (the protobuf compiler) on each of PLAN's `.proto` files.  The script auto-generates serialization and gRPC source code used in other PLAN projects.   
 
 Specifically, this process generates:
- * C# code for PLAN's Unity-based client, `plan-systems/plan-unity`
- * Go code for PLAN's go-based p2p server node, `plan-systems/go-plan`
+ * C# code for PLAN's Unity-based client, `plan-systems/plan-client-unity`
+ * Go code for PLAN's go-based p2p server node, `plan-systems/plan-pnode`
 
 
 
@@ -52,7 +52,7 @@ Specifically, this process generates:
 
      `./build-protobufs.sh`
 
-6. For convenience, the above script moves the newly generated `.go` files into the right places within [go-plan](https://github.com/plan-systems/go-plan).  If you are building [plan-unity](https://github.com/plan-systems/plan-unity), then you must move the generated `.cs` files into:
+6. For convenience, the above script moves the newly generated `.go` files into the right places within [plan-core](https://github.com/plan-systems/plan-core).  If you are building [plan-client-unity](https://github.com/plan-systems/plan-client-unity), then you must move the generated `.cs` files into:
 
     `plan-systems/plan-unity/Assets/src/Protobufs+gRPC/`
     
