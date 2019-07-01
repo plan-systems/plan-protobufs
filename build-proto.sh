@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 #
 #
 # See:
-#    plan-systems/plan-protobuf/README.md 
+#    plan-systems/plan-protobuf/README.md
 #    http://plan-systems.org
 #
 #
@@ -33,7 +33,7 @@ else
 fi
 
 protoc="$BIN_DIR/protoc"
-protoc_vers=`$protoc --version`
+protoc_vers=$($protoc --version)
 
 if [[ 0 == 1 ]]; then
     echo
@@ -47,25 +47,31 @@ fi
 
 
 proto_pathname="$SELF_DIR/pkg/$PKG_NAME/$PKG_NAME.proto"
-proto_include=$(dirname  ${proto_pathname})
+proto_include=$(dirname "${proto_pathname}")
 
 # Let plan-protobuf's pkg dir be a root include
-proto_include=$(dirname  ${proto_include})
+proto_include=$(dirname  "${proto_include}")
 #echo "include::::::::: $proto_include"
 #echo "OUT ---> $OUT_PATH"
 
-printf "$protoc_vers: %18s  --$PROTO_VERB-->  $proto_pathname\n" $PKG_NAME
+printf "$protoc_vers: %18s  --$PROTO_VERB-->  $proto_pathname\n" "$PKG_NAME"
 
 if [[ "$PROTO_VERB" == "go" ]]; then
-    $protoc -I=$proto_include  -I="$GOPATH/src" --go_out=$OUT_PATH $proto_pathname
+    $protoc -I="$proto_include"  -I="$GOPATH/src" \
+            --go_out="$OUT_PATH" \
+            "$proto_pathname"
 fi
 
 if [[ "$PROTO_VERB" == "gofast" ]]; then
-    $protoc -I=$proto_include  -I="$GOPATH/src" --gofast_out=plugins=grpc:$OUT_PATH $proto_pathname
+    $protoc -I="$proto_include"  -I="$GOPATH/src" \
+            --gofast_out=plugins="grpc:$OUT_PATH" \
+            "$proto_pathname"
 fi
 
 if [[ "$PROTO_VERB" == "csharp" ]]; then
-    $protoc -I=$proto_include  -I="$GOPATH/src" --csharp_out "$OUT_PATH" --grpc_out "$OUT_PATH" --plugin=protoc-gen-grpc=$BIN_DIR/grpc_csharp_plugin $proto_pathname
+    $protoc -I="$proto_include"  -I="$GOPATH/src" \
+            --csharp_out "$OUT_PATH" \
+            --grpc_out "$OUT_PATH" \
+            --plugin=protoc-gen-grpc="$BIN_DIR/grpc_csharp_plugin" \
+            "$proto_pathname"
 fi
-
-
