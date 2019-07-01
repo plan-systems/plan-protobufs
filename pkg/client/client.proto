@@ -5,9 +5,9 @@ syntax = "proto3";
 
 package client;
 
-import "github.com/plan-systems/plan-protobufs/proto/pdi.proto";
-import "github.com/plan-systems/plan-protobufs/proto/plan.proto";
-import "github.com/plan-systems/plan-protobufs/proto/repo.proto";
+import "pdi/pdi.proto";
+import "plan/plan.proto";
+import "repo/repo.proto";
 
 
 

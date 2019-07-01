@@ -9,12 +9,12 @@
 
 
 if [[ $# -ne 3 ]]; then
-    echo "Usage: ./build-proto.sh <file.proto> <proto_compiler> <out_path>"
+    echo "Usage: ./build-proto.sh <pkg_name> <proto_compiler> <out_path>"
     echo "proto_compiler: go|gofast|csharp"
     exit
 fi
 
-PROTO_FILE=$1
+PKG_NAME=$1
 PROTO_VERB=$2
 OUT_PATH=$3
 
@@ -46,10 +46,15 @@ if [[ 0 == 1 ]]; then
 fi
 
 
-proto_pathname="$SELF_DIR/proto/$PROTO_FILE"
+proto_pathname="$SELF_DIR/pkg/$PKG_NAME/$PKG_NAME.proto"
 proto_include=$(dirname  ${proto_pathname})
 
-printf "$protoc_vers: %15s  --$PROTO_VERB-->  $proto_pathname\n" $PROTO_FILE
+# Let plan-protobuf's pkg dir be a root include
+proto_include=$(dirname  ${proto_include})
+#echo "include::::::::: $proto_include"
+#echo "OUT ---> $OUT_PATH"
+
+printf "$protoc_vers: %18s  --$PROTO_VERB-->  $proto_pathname\n" $PKG_NAME
 
 if [[ "$PROTO_VERB" == "go" ]]; then
     $protoc -I=$proto_include  -I="$GOPATH/src" --go_out=$OUT_PATH $proto_pathname

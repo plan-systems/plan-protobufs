@@ -4,8 +4,8 @@ syntax = "proto3";
 
 package pdi;
 
-import "github.com/plan-systems/plan-protobufs/proto/plan.proto";
-import "github.com/plan-systems/plan-protobufs/proto/ski.proto";
+import "plan/plan.proto";
+import "ski/ski.proto";
 
 
 

@@ -6,9 +6,9 @@ syntax = "proto3";
 
 package repo;
 
-import "github.com/plan-systems/plan-protobufs/proto/ski.proto";
-import "github.com/plan-systems/plan-protobufs/proto/plan.proto";
-import "github.com/plan-systems/plan-protobufs/proto/pdi.proto";
+import "ski/ski.proto";
+import "plan/plan.proto";
+import "pdi/pdi.proto";
 
 
 
