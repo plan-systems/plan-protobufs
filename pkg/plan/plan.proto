@@ -1,9 +1,20 @@
+/*********************************************************************************************************************
+**
+**            P urposeful
+**            L ogistics
+**            A rchitecture
+**   P  L  A  N etwork
+**
+**
+**  May PLAN support her users, the members of PLAN Systems, and myself so that I could not wish for more. 
+**
+**  May PLAN manifest joy at the largest scale possible (that's really big!)
+**
+**********************************************************************************************************************/
+
 // See http://github.com/plan-systems/plan-protobufs/
-
 syntax = "proto3";
-
 package plan;
-
 
 /******************************************************************************************************************************************
 plan.Block is a fundamental PLAN data structure intended for generic content packaging and serialization. 
@@ -70,12 +81,21 @@ message Link {
                 string              desc                        = 2;
 
     // E.g.
-    //    /plan/[(CommunityID)|.]/[ch|member|epoch]/(TID)
-    //    /plan/[(CommunityID)|.]/cfi/(hash)
+    //    /plan/[(CommunityID)|.]/ch/<ChID>
+    //    /plan/[(CommunityID)|.]/[ch|member|epoch]/<TID>
+    //    /plan/[(CommunityID)|.]/cfi/[ipfs|acme]/<hash>
     //    /http/plan-systems.org
                 string              uri                         = 3;
 
 }
+
+
+message ChInvocation {
+                bytes               chID                        = 1;
+                string              ch_protocol                 = 2;
+                string              ch_adapterID                = 3;
+}
+
 
 
 enum ValType {
