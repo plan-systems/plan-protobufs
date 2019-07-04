@@ -79,17 +79,6 @@ message MemberSessionReq {
 
 
 
-
-message ChInvocation {
-
-                bytes               chID                        = 1;
-
-                string              ch_adapter_desc             = 10;
-
-}
-
-
-
 enum ChSessionFlags {
 
     // If set, entry bodies will be included
@@ -202,7 +191,7 @@ enum MsgOp {
     // The client echos this msg back to the workstation on success.
     LOGIN_TO_WS_SEAT            = 21;
 
-    // BUF0 is the ChID of the channel to open.
+    // BUF0 is a marshalled plan.ChInvocation
     START_CH_SESSION            = 22;
     
 
