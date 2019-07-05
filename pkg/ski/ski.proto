@@ -15,7 +15,7 @@ enum KeyType {
     SigningKey          = 3;
 }
 
-// CryptoKitID identifies a encryption suite that implements ski.CryptoKit
+// CryptoKitID identifies an encryption suite that implements ski.CryptoKit
 enum  CryptoKitID {
     DEFAULT_KIT         = 0;
 
@@ -23,7 +23,7 @@ enum  CryptoKitID {
     ED25519             = 2;
 }
 
-// CryptoKitID identifies a hasher that implements ski.HaskKit
+// CryptoKitID identifies a hash algorithm that implements ski.HaskKit
 enum  HashKitID {
     DEFAULT_HASH_KIT    = 0;
 
@@ -157,12 +157,12 @@ message KeyRef {
 
 // KeyEntry is used in 3 ways:
 //    1) Storage/Export mode: used to store all fields of a fully generated key 
-//         a) KeyEntry.PrivKey != nil
+//         - KeyEntry.PrivKey != nil
 //    2) Ref/Spec mode: used to reference an existing key somewhere else 
-//         a) KeyEntry.PrivKey == nil
-//         b) Fields used: KeyInfo.PubKey (other fields ignored)
+//         - KeyEntry.PrivKey == nil
+//         - Fields used: KeyInfo.PubKey (other fields ignored)
 //    3) KeyGen mode: used as a guide to generate a new key
-//         a) Fields used: KeyInfo.KeyType and KeyInfo.CryptoKitID (other fields ignored)
+//         - Fields used: KeyInfo.KeyType and KeyInfo.CryptoKitID (other fields ignored)
 message KeyEntry {
     
     // Info about this key
@@ -179,7 +179,6 @@ message KeyEntry {
 message Keyring {
 
     // Any binary name for this Keyring (except a zero-length name).
-   // When choosing a keyring name, choose more unique and/or random bytes first.  This improves lookup efficiency and performance.
                 bytes               name                        = 1;
 
     // Ordered list of KeyEntry (potentially sorted by KeyInfo.PubKey)
