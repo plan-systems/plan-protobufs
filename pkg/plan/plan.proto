@@ -63,10 +63,11 @@ message Block {
 
     // Payload data, serialized in accordance with the accompanying codec descriptors (above).
                 bytes               content                 = 4;
+                string              content_str             = 5;
 
     // A Block can optionally contain nested "sub" blocks.  A Block's sub-blocks
     //    can be interpreted or employed any way a client or protocol sees fit.
-    repeated    Block               subs                    = 5;
+    repeated    Block               subs                    = 10;
 }
 
 
@@ -81,8 +82,8 @@ message Link {
                 string              desc                        = 2;
 
     // E.g.
-    //    /plan/[(CommunityID)|.]/ch/<ChID>
-    //    /plan/[(CommunityID)|.]/[ch|member|epoch]/<TID>
+    //    /plan/[(CommunityID)|.]/ch/<ch_protocol>/<ChID>
+    //    /plan/[(CommunityID)|.]/[member|epoch]/<TID>
     //    /plan/[(CommunityID)|.]/cfi/[ipfs|acme]/<hash>
     //    /http/plan-systems.org
                 string              uri                         = 3;
