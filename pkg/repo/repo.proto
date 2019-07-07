@@ -118,25 +118,35 @@ enum MsgOp {
     // Msg.ITEMS is a list of raw txns of an entry ready to be committed.
     COMMIT_TXNS                 = 3;
 
-    RESERVED_4                  = 4;
-    RESERVED_5                  = 5;
+    // Requests the latest pdi.ChInfo for the given or current channel ID.
+    // If sessID == 0, BUF0 is a ChID
+    // If sessID > 0, BUF0 is ignored (and the ChID of open channel is used)
+    // Response: is a pdi.ChInfo
+    LATEST_CH_INFO              = 4;
+
+    // Requests the latest pdi.ChannelEpoch for the given or current channel ID.
+    // Response: is a pdi.ChannelEpoch
+    LATEST_CH_EPOCH             = 5;
+    
+    // BUF0 is a marshalled plan.ChInvocation
+    START_CH_SESSION            = 6;
+
 
    /*****************************************************
     ** MemberSession (sessID == 0) -> Client
     **/
 
     // Sent to the client following OpenMemberSession.
-    MEMBER_SESSION_READY        = 6;
+    MEMBER_SESSION_READY        = 7;
 
     // Sent in response to a COMMIT_TXNS (to the client)
     // msg.EntryInfo and msg EntryState contain info associated with the given txn (may be nil)
-    COMMIT_TXNS_COMPLETE        = 7;
+    COMMIT_TXNS_COMPLETE        = 8;
 
     // Sent to the member session when a new channel is to be created.  
-    // BODY is a marshalled ChannelEpoch.
-    CH_GENESIS_ENTRY            = 8;
+    // BODY is a ChannelEpoch
+    CH_GENESIS_ENTRY            = 9;
 
-    RESERVED_9                  = 9;
 
    /*****************************************************
     ** Client -> ChSession (sessID > 0)
@@ -191,9 +201,7 @@ enum MsgOp {
     // The client echos this msg back to the workstation on success.
     LOGIN_TO_WS_SEAT            = 21;
 
-    // BUF0 is a marshalled plan.ChInvocation
-    START_CH_SESSION            = 22;
-    
+
 
 }
 
@@ -278,9 +286,12 @@ message MemberSeed {
 
 
 
+
 /*****************************************************
 ** Internal
 **/
+
+
 
 
 enum EntryStatus {
@@ -361,10 +372,7 @@ message ChMgrState {
 
 message ChStoreState {
 
-    // Only set when this channel is in the process of being created.
-    //            bool                genesis_mode                = 1;
-
-                bytes               channelID                   = 1;
+                bytes               chID                        = 1;
 
                 string              ch_protocol                 = 2;
 
@@ -373,8 +381,6 @@ message ChStoreState {
 
     //  If not set, this channel is not yet able to validate entries (e.g. ChUnknown can't)
                 bool                merge_enabled               = 4;
-
-                pdi.ChannelInfo     channel_info                = 9;
     
 
 }
