@@ -14,7 +14,7 @@ P  L  A  N etwork
 PLAN powerfully leverages [Protocol Buffers](https://developers.google.com/protocol-buffers/) and [gRPC](https://grpc.io/) messages and services.  This repo is charged with housing PLAN's foundational data structures, allowing any consuming projects to be fully interoperable and future proof.  This repo also hosts the script `build-proto.sh` which invokes `protoc` (the protobuf compiler) on PLAN's `.proto` files.  Consuming projects invoke this script to easily auto-generate all serialization and gRPC source code to a specfied destination.   
 
 
-### Build Flow
+### Setup
 
 1. Set up **Gprc.Tools** (and C# plugin):
     1. Download the [latest Grpc.Tools nuget package](https://www.nuget.org/packages/Grpc.Tools/)
@@ -25,10 +25,12 @@ PLAN powerfully leverages [Protocol Buffers](https://developers.google.com/proto
     
         `unzip grpc.tools.X.XX.0.nupkg -d $GOPATH/src/github.com/plan-systems/plan-protobufs/Grpc.Tools`        
                 
-    3. Add execute permissions:
+    3. Add execute permissions to for your platform:
         ```
-        chmod +x plan-protobufs/Grpc.Tools/tools/macosx_x64/*
-        chmod +x plan-protobufs/Grpc.Tools/tools/linux_x64/*
+        cd $GOPATH/src/github.com/plan-systems/plan-protobufs/Grpc.Tools
+        chmod +x tools/macosx_x64/*
+        chmod +x tools/linux_x64/*
+        chmod +x tools/windows_x64/*
         ```
        
 2. Ensure your `$PATH` contains Go's `bin` directory, e.g. `PATH="${GOPATH}/bin:${PATH}"`
@@ -40,12 +42,13 @@ PLAN powerfully leverages [Protocol Buffers](https://developers.google.com/proto
 4. Install [gRPC](https://grpc.io/):
 
      `go get -u google.golang.org/grpc`
-
-5. Invoke `build-proto.sh` dependent build scripts from consuming projects:
+	 
+5. Invoke `build-proto.sh` build scripts from consuming projects:
 
     ```
+	cd $GOPATH/src/github.com/plan-systems
     plan-core/build-protobufs.sh
-    plan-client-unity/build-protobufs.sh
+    plan-client-unity/Assets/plan-protobufs/build-protobufs.sh
     ```
 
 6. Pick up your new lambo.
