@@ -316,10 +316,10 @@ enum EntryOp {
     // This entry's body replaces the specified previous entry.
     SUPERSEDE_ENTRY             = 2;
 
-    /*  - This entry modifies one or more of a given channel's meta fields (e.g. channel description, icon, etc).
-        - A ChannelInfo snapshot/composite can be reconstructed by sequentially applying every EDIT_CHANNEL_INFO 
-    change to the previous ChannelInfo composite up to the present time.
-        - Only channel admins or moderators are permitted to originate this op. */
+    // This entry modifies one or more of a given channel's meta fields (e.g. channel description, icon, etc).
+    // A channels "current" composite is constructed by sequentially applying every EDIT_CHANNEL_INFO 
+    //    change to the previous ChannelInfo composite up to the present time.
+    // Only channel admins or moderators are permitted to originate this op.
     EDIT_CHANNEL_INFO           = 3;
 
     // This entry initiates a new channel epoch, inserting one or more changes to the channel's current ChannelEpoch.
@@ -451,18 +451,30 @@ message ChannelEpoch {
 }
 
 
+message ChAttribsEdit {
 
-message ChannelInfo {
+    repeated    string              attribs_to_remove           = 1;
 
-    // This permanently identifies a channel (immutable)
-                bytes               channelTID                  = 1;
-
-    // Container for all content-level properties (e.g. channel title, description, etc) 
-                uint32              info_rev                    = 7;
-                plan.Block          info                        = 8;
-
-
+    // Attribs to add (indexed byt <item>.Label)
+    repeated    plan.Block          attribs_to_add              = 2;
+  
 }
+
+
+
+// ChInfo is a composite of or more ChAttribsEdit.
+message ChInfo {
+
+    // Only used when ChInfo is being used to communicate info to others; set to nil otherwise.
+                ChannelEpoch        epoch                       = 1;
+
+    // Channel attribs, indexed by <attrib>.Label
+    // This is a composite of any sequence of ChAttribsEdit.
+    repeated    plan.Block          attribs                     = 2;
+  
+}
+
+
 
 
 
