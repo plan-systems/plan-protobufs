@@ -1,12 +1,10 @@
 #!/bin/bash
 #
-#
 # See:
-#    plan-systems/plan-protobuf/README.md
+#    http://github.com/plan-systems/plan-protobuf/README.md
 #    http://plan-systems.org
 #
 #
-
 
 if [[ $# -ne 3 ]]; then
     echo "Usage: ./build-proto.sh <pkg_name> <proto_compiler> <out_path>"
@@ -27,8 +25,10 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     BIN_DIR="$SELF_DIR/Grpc.Tools/tools/linux_x64"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     BIN_DIR="$SELF_DIR/Grpc.Tools/tools/macosx_x64"
+elif [[ "$OSTYPE" == "cygwin"* ]]; then
+    BIN_DIR="$SELF_DIR/Grpc.Tools/tools/windows_x64"
 else
-    echo "Unknown environment"
+    echo "Unknown PLAN build environment ($OSTYPE)"
     exit
 fi
 
@@ -46,32 +46,41 @@ if [[ 0 == 1 ]]; then
 fi
 
 
-proto_pathname="$SELF_DIR/pkg/$PKG_NAME/$PKG_NAME.proto"
-proto_include=$(dirname "${proto_pathname}")
+proto_include="$SELF_DIR/pkg"
+proto_pathname="$proto_include/$PKG_NAME/$PKG_NAME.proto"
 
-# Let plan-protobuf's pkg dir be a root include
-proto_include=$(dirname  "${proto_include}")
 #echo "include::::::::: $proto_include"
 #echo "OUT ---> $OUT_PATH"
+#echo "IN ---> $proto_pathname"
 
 printf "$protoc_vers: %18s  --$PROTO_VERB-->  $proto_pathname\n" "$PKG_NAME"
 
+csharp_exe="$BIN_DIR/grpc_csharp_plugin"
+
+if [[ "$OSTYPE" == "cygwin"* ]]; then
+	csharp_exe=$(cygpath -w "$csharp_exe")
+	proto_include=$(cygpath -w "$proto_include")
+	proto_pathname=$(cygpath -w "$proto_pathname")
+	OUT_PATH=$(cygpath -w "$OUT_PATH")
+fi
+
+
 if [[ "$PROTO_VERB" == "go" ]]; then
-    $protoc -I="$proto_include"  -I="$GOPATH/src" \
+    $protoc -I="$proto_include"  \
             --go_out="$OUT_PATH" \
             "$proto_pathname"
 fi
 
 if [[ "$PROTO_VERB" == "gofast" ]]; then
-    $protoc -I="$proto_include"  -I="$GOPATH/src" \
+    $protoc -I="$proto_include"                   \
             --gofast_out=plugins="grpc:$OUT_PATH" \
             "$proto_pathname"
 fi
 
 if [[ "$PROTO_VERB" == "csharp" ]]; then
-    $protoc -I="$proto_include"  -I="$GOPATH/src" \
+    $protoc -I="$proto_include"      \
             --csharp_out "$OUT_PATH" \
-            --grpc_out "$OUT_PATH" \
-            --plugin=protoc-gen-grpc="$BIN_DIR/grpc_csharp_plugin" \
+            --grpc_out "$OUT_PATH"   \
+            --plugin=protoc-gen-grpc="$csharp_exe" \
             "$proto_pathname"
 fi
