@@ -71,6 +71,22 @@ message Block {
 }
 
 
+
+/****************  PLAN link URIs  *****************
+
+<plan_community_addr> := /plan/[.|@<lookup_by_name>|#<community_genesis_hash>|![<federation_name>]]/
+
+<ch_protocol>    := "[std|<ch_protocol_family>]/<protocol_pathname>
+<channel_link>   := <plan_community_addr>/ch/<ch_protocol>/ChID/<base64url ChID>
+<cfi_asset_link> := <plan_community_addr>/cfi/[ipfs|<cfi_impl>]/<asset_name>
+<member_link>    := <plan_community_addr>/member/id/<member_id>
+<entry_link>     := <channel_link>/<entry_TID>
+<http_link>      := /http/[plan-systems.org|<url>]
+
+*/
+
+
+
 // Link is an opaque URI most comparable to a URL, but it's "multiaddr" style, rather than protocol://URI.
 message Link {
 
@@ -81,11 +97,7 @@ message Link {
     // This describes this link in a meaningful way
                 string              desc                        = 2;
 
-    // E.g.
-    //    /plan/[(CommunityID)|.]/ch/<ch_protocol>/<ChID>
-    //    /plan/[(CommunityID)|.]/[member|epoch]/<TID>
-    //    /plan/[(CommunityID)|.]/cfi/[ipfs|acme]/<hash>
-    //    /http/plan-systems.org
+    // See docs on PLAN URIs (above)
                 string              uri                         = 3;
 
 }
