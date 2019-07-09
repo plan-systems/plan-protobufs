@@ -255,7 +255,8 @@ message RepoSeed {
                 bytes               signed_genesis_seed         = 1;
     
                 string              suggested_dir_name          = 2;
-
+                string              community_name              = 3;
+                
     repeated    plan.ServiceInfo    services                    = 5;
 
 
