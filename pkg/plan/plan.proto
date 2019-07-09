@@ -141,13 +141,26 @@ enum Encoding {
 
 
 
+enum ServiceType {
+    Undefined               = 0;
 
+    StorageProvider         = 1;
+    Repo                    = 2;
+    WsHost                  = 3;
+    ServiceTracker          = 4;
+}
 
 
 // ServiceInfo contains descriptions, network addresses, ports, and connection info for remote services.
 message ServiceInfo {
-                string              addr                        = 1;
-                string              network                     = 2;
+                ServiceType         service_type                = 1;
+                string              nameID                      = 2;
+                bytes               nodeID                      = 3;
+                string              desc                        = 4;
+                
+                string              addr                        = 10;        // e.g. "128.192.2.11", "128.192.2.11:5192", ":5192"
+                string              network                     = 11;        // e.g. "tcp"
+
 }
 
 
