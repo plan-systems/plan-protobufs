@@ -62,5 +62,6 @@ message WsLogin {
 message SeatInfo {
                 repo.MemberSeed     seed                        = 1;
                 MemberSeat          seat                        = 2;
+                plan.ServiceInfo    host                        = 3;
 
 }
