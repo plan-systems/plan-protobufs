@@ -58,7 +58,7 @@ message Block {
                 string              codec                   = 2;
 
     // This is a reserved integer alternative to Block.Codec.
-    // See: https://github.com/multiformats/multicodec/blob/master/table.csv
+    // See: https://github.com/plan-systems/multicodec/blob/master/table.csv
                 uint32              codec_code              = 3;
 
     // Payload data, serialized in accordance with the accompanying codec descriptors (above).
@@ -119,25 +119,6 @@ enum ValType {
     BLOCK                   = 4;
 }
 
-
-
-enum Encoding {
-
-    Unspecified             = 0;
-
-    // A PLAN StorageProvider txn payload segment
-    TxnPayloadSegment       = 1;
-
-    // A protobufs-encoded plan.Block
-    Pb_Block                = 2;
-
-    // A protobufs-encoded pdi.EntryCrypt
-    Pb_EntryCrypt           = 3;
-
-    // A protobufs-encoded pdi.EntryInfo
-    Pb_EntryInfo            = 4;
-
-}
 
 
 

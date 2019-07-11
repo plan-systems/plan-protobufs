@@ -99,8 +99,9 @@ message TxnInfo {
     **/
 
     // Describes how to to decode the payload data (this value is identical for each segment that comprises a reassembled payload)
-    // This should be identical for each segment
-                plan.Encoding       payload_encoding            = 5;
+    // This specifies the encoding of the payload and conforms to https://github.com/plan-systems/multicodec
+    // In PLAN, this value is typically plan.EntryCryptCodecID.
+                uint32              payload_codec               = 5;
 
     // Segment byte size
                 uint32              seg_sz                      = 8;

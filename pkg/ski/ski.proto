@@ -4,7 +4,6 @@ syntax = "proto3";
 
 package ski;
 
-import "plan/plan.proto";
 
 // KeyType identifies how a key operates 
 enum KeyType {
@@ -222,7 +221,9 @@ message SigHeader {
 
     // Size of the "header" payload (i.e. the payload that is also hashed and signed)
                 uint32              header_sz                   = 7;
-                plan.Encoding       header_encoding             = 8;
+
+    // This value specifies the encoding of the header and is a code conforming to https://github.com/plan-systems/multicodec
+                uint32              header_codec                = 8;
 
     // Size of the "body" payload (i.e. the payload that is NOT hashed signed)
                 uint64              body_sz                     = 9;
