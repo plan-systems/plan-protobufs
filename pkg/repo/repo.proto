@@ -375,29 +375,20 @@ message ChStoreState {
 
                 bytes               chID                        = 1;
 
+        // ChProtocol is the channel protocol identifying how clients should interpret content entries in this channel. 
+        // Its value and originates from this channel's genesis ChannelEpoch and is regarded as immutable.
+        // If not set, then channel content entries arrived *before* the genesis ChannelEpoch and so the protocol is still unknown.
                 string              ch_protocol                 = 2;
 
+        // This identifies what agent type/class last maintained this channel (or empty if no agent has ever been assigned).
+        // This exists so that if/when a different agent is assigned, it can be used to trigger full channel revalidation.
+                string              assigned_agentID            = 3;
+
     // All entry TIDs up to this point (and including this TID) are not pending active validation.
-                bytes               validated_upto              = 3;
-
-    //  If not set, this channel is not yet able to validate entries (e.g. ChUnknown can't)
-                bool                merge_enabled               = 4;
-    
+                bytes               validated_upto              = 10;
 
 }
 
-
-
-
-message IntSet {
-
-    repeated    uint64              ints                        = 1;
-
-    // Range: [From, To) 
-                uint64              from                        = 2;
-                uint64              to                          = 3;
-
-}
 
 
 
