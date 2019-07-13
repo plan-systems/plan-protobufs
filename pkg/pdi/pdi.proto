@@ -13,8 +13,9 @@ import "ski/ski.proto";
 
 /**********************************************************************************************************************
 A StorageProvider is an access point to a community's append-only shared persistent data store. 
-In addition to being a repository of community member txns, a StorageProvider (or set of
-StorageProviders), serve as the community's validators.  This means they:
+
+In addition to being a repository of community member txns/extrinsics, a StorageProvider (or set of
+StorageProviders), essentially serve as the community's validators, meaning they:
     (a) authenticate that a txn is officially part of the community record, and 
     (b) seal *when* a txn became part of the record
     
@@ -22,12 +23,20 @@ Although the StorageProvider abstraction is modeled after a blockchain (an appen
 its implementation can either be centralized *or* decentralized.  This means a StorageProvider
 implementation could be a blockchain or a conventional centralized replicating server/cluster.
 
-Un the StorageProvider model (as with a conventional blockchain model) trust is externalized
+In the StorageProvider model (as with a conventional blockchain model), trust is externalized
 to outside the system by use of StorageProvider-maintained units of account: 
     (1) Kb - Number of kilobytes of txn data a given address (account) can post.
     (2) Op - Number of "operations" a given address can perform.  Posting a new txn costs 1 Op.
 These units of account are solely a mechanism for controlling who has append access to the community's store and is
-generally managed via the standard procedures for admitting new members.*/
+generally managed via the standard procedures for admitting new members.
+
+Newcomers may be correctly point out that a blockchain/DLT model for storage is a poor choice because, hey,
+what about those terabytes cat videos you want to store.  Allow us to introduce you to the Cloud File Interface:
+    https://github.com/plan-systems/design-docs/blob/master/PLAN-API-Documentation.md#Cloud-File-Interface
+
+For more information about StorageProvider:
+    https://github.com/plan-systems/design-docs/blob/master/PLAN-API-Documentation.md#Persistent-Data-Interface
+**********************************************************************************************************************/
 service StorageProvider {
 
     // Starts a new client session.
