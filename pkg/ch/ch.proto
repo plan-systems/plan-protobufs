@@ -18,14 +18,98 @@ import "plan/plan.proto";
 **/
 
 
-enum RgnPts {
+enum SpaceOp {
 
-    ORIGIN_X                = 0;
-    ORIGIN_Y                = 1;
-    ORIGIN_Z                = 2;
+    // Places the named asset ID(s) with the specified coordinate transform into the specified layer ID, drawing with the given styleID.
+    // If ModRGBA is set, then the given asset is modulated by the given RGBA value.
+    PLACE_ASSET             = 0;
+
+    // Assigns the given asset block to the specified asset ID.
+    ASSIGN_ASSET            = 1;
+
+    // Assigns the given asset block to the specified style ID.
+    // Values that transfer to the assignment: 
+    //    StrokeStyle
+    //    StrokeRGBA
+    //    StrokeWidth
+    //    FillStyle
+    //    FillRGBA
+    ASSIGN_STYLE            = 2;
 
 }
 
+enum TransformType {
+    NONE                    = 0;
+
+    // SpaceMsg.Transform[] is 3 elements: an XYZ offset added to input coordinates.
+    OFFSET_XYZ              = 1;
+
+    // SpaceMsg.Transform[] is 6 elements: 4 matrix elements followed by XY offsets added to transformed coordinates.
+    MATRIX_2X2_XY           = 2;
+
+    // SpaceMsg.Transform[] is 16 elements and is a conventional XYZW perspective transformation matrix.
+    MATRIX_4X4              = 3;
+
+}
+
+
+message SpaceMsg {
+
+                SpaceOp             op                          = 1;
+                plan.Block          asset                       = 2;
+
+                string              assetID                     = 5;
+                string              layerID                     = 6;
+                string              styleID                     = 7;
+
+                fixed32             modRGBA                     = 8;
+
+                TransformType       transform_type              = 10;      
+    repeated    double              transform                   = 11;
+
+}
+
+enum VertexFormat {
+    XY                      = 0;
+    XYZ                     = 1;
+
+}
+
+message VertexSet {
+    repeated    float               float                       = 1;
+    repeated    fixed32             RGBA                        = 2;
+}
+
+
+/*****************************************************
+** ch/std/Sheets
+**/
+
+
+enum SheetsOp {
+
+    // Overwrites the given cell at (col,row) with the given value.
+    SET_CELL_VALUE          = 0;
+
+    // Inserts a row/col at the given index specified (the other index is ignored)
+    INSERT_ROW              = 1;
+    INSERT_COL              = 2;
+
+}
+message SheetsMsg {
+                SheetsOp            op                          = 1;
+                int32               col                         = 2;
+                int32               row                         = 3;
+
+                string              value                       = 10;
+                //int32               count                       = 11;
+
+}
+
+
+
+
+/*
 
 
 
@@ -34,11 +118,11 @@ enum RegionType {
     // The first three points are the XYZ anchor point, and the 4th is the point gaussian radius (which is optional)
     POINT                   = 0;
 
-    // The first three points are the XYZ anchor point and the the remaining are a sequence of UV cords that make a polygon.
-    // †he polygon assumed to be closed, so the last point shouldn't be a repeat of the first point.
-    POLYGON_2D              = 1;
+    // The first three 3 are the XYZ anchor point and the the remaining are a sequence of XY cords that form a polygon.
+    // The polygon assumed to be closed, so the last point shouldn't be a repeat of the first point.
+    PATH_2D                 = 1;
 
-    // The first three points are the XYZ anchor point and the the remaining express a R3 spine.
+    // The first three 3 are the XYZ anchor point and the the remaining express a R3 spine.
     SPLINE_2D               = 2;
 
 }
@@ -47,9 +131,15 @@ enum RegionType {
 message Region {
 
                 RegionType          type                        = 1;
+
+
+    // The first three points 
+    repeated    double              transform                   = 2;
+
+    // See RegionType
     repeated    double              pts                         = 2;
 
-    // Specifies the stroke style and color, etc
+    // Specifies the stroke style and color, etc (or 0)
                 uint32              stroke_style_id             = 3;
                 uint32              fill_style_id               = 4;
 
@@ -59,7 +149,7 @@ message Region {
 
 }
 
-/*
+
 
 // CordProtocol describes the kind of coordinate data in this data set.
 enum CordType {
@@ -99,7 +189,7 @@ message LocationList {
     //    drews-desktop/
                 string              place_protocol              = 1;
 
-    // Coordinate protocol (interoperability amongst data sets and determines UX look and feed)
+    // Coordinate protocol (interoperability amongst data sets and determines UX look and feel)
     // e.g. 
     //    geo/lat-long
     //    abstract/xyz
