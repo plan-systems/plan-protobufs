@@ -30,11 +30,11 @@ to outside the system by use of StorageProvider-maintained units of account:
 These units of account are solely a mechanism for controlling who has append access to the community's store and is
 generally managed via the standard procedures for admitting new members.
 
-Newcomers may be correctly point out that a blockchain/DLT model for storage is a poor choice because, hey,
-what about those terabytes cat videos you want to store.  Allow us to introduce you to the Cloud File Interface:
+Newcomers may be correctly point out that a blockchain/DLT model is a poor choice to model generalized storage.
+However, it's not the only storage abstraction in PLAN.  Allow us to introduce the Cloud File Interface:
     https://github.com/plan-systems/design-docs/blob/master/PLAN-API-Documentation.md#Cloud-File-Interface
 
-For more information about StorageProvider:
+And for more about StorageProvider:
     https://github.com/plan-systems/design-docs/blob/master/PLAN-API-Documentation.md#Persistent-Data-Interface
 **********************************************************************************************************************/
 service StorageProvider {
