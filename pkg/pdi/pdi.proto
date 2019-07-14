@@ -12,7 +12,7 @@ import "ski/ski.proto";
 
 
 /**********************************************************************************************************************
-A StorageProvider is an access point to a community's append-only shared persistent data store. 
+StorageProvider is the gRPC service interface for a community's append-only shared persistent data store.
 
 In addition to being a repository of community member txns/extrinsics, a StorageProvider (or set of
 StorageProviders), essentially serve as the community's validators, meaning they:
@@ -21,7 +21,7 @@ StorageProviders), essentially serve as the community's validators, meaning they
     
 Although the StorageProvider abstraction is modeled after a blockchain (an append-only db),
 its implementation can either be centralized *or* decentralized.  This means a StorageProvider
-implementation could be a blockchain or a conventional centralized replicating server/cluster.
+implementation could be a blockchain or a conventional centralized server/cluster.
 
 In the StorageProvider model (as with a conventional blockchain model), trust is externalized
 to outside the system by use of StorageProvider-maintained units of account: 
