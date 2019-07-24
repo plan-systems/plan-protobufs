@@ -40,10 +40,12 @@ enum CryptOp {
 	// Generates a signature for BufIn using the referenced signing key, placing the signature into BufOut.
     SIGN                = 0;
 
-	// Encrypts BufIn using the symmetric key referenced by a Keyring "name" and key named by its pub key. 
+    // Inverse of DECRYPT_SYM
+	// Encrypts BufIn using the symmetric key referenced by OpKey. 
     ENCRYPT_SYM         = 1;
 
-	// Decrypts BufIn using the referenced symmetric key.
+    // Inverse of ENCRYPT_SYM
+	// Decrypts BufIn using the symmetric key referenced by OpKey.
     DECRYPT_SYM         = 2;
 
 	// Encrypts BufIn for a recipient holding the private key associated with the pub key contained in PeerKey,
