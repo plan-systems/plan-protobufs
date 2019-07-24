@@ -16,7 +16,7 @@ enum KeyType {
 
 // CryptoKitID identifies an encryption suite that implements ski.CryptoKit
 enum  CryptoKitID {
-    DEFAULT_KIT         = 0;
+    INVALID_CRYPTO_KIT 	= 0;
 
     NaCl                = 1;
     ED25519             = 2;
@@ -24,7 +24,7 @@ enum  CryptoKitID {
 
 // CryptoKitID identifies a hash algorithm that implements ski.HaskKit
 enum  HashKitID {
-    DEFAULT_HASH_KIT    = 0;
+    INVALID_HASH_KIT    = 0;
 
     LegacyKeccak_256    = 1;
     LegacyKeccak_512    = 2;
