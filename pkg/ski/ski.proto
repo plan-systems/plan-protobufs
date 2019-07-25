@@ -58,12 +58,12 @@ enum CryptOp {
 
     // Inverse of EXPORT_USING_PW
     // Identical to IMPORT_FROM_PEER except that BufIn is instead decrypted via CryptoKit.DecryptUsingPassword(),
-    //    using CryptOp.PeerKey as a the password.
+    //    using CryptOp.PeerKey as a the password.  The CryptoKit invoked is determined by CryptOpArgs.DefaultCryptoKit.
     IMPORT_USING_PW     = 5;
 
     // Inverse of IMPORT_USING_PW
     // Identical to EXPORT_TO_PEER except the output serialized KeyTome is encrypted via CryptoKit.EncryptUsingPassword(),
-    //    using CryptOp.PeerKey as a the password.
+    //    using CryptOp.PeerKey as a the password.  The CryptoKit invoked is determined by CryptOpArgs.DefaultCryptoKit.
     EXPORT_USING_PW     = 6;
 
     // Inverse of EXPORT_TO_PEER
@@ -139,7 +139,6 @@ message KeyInfo {
 
     // Public part of the key; how this key is also referenced publicly (in base-256 form)
                 bytes               pub_key                     = 4;
-
 
 }
 
@@ -233,3 +232,12 @@ message SigHeader {
 }
 
 
+message KeyTomeCrypt {
+
+    // A serialized ski.KeyTome encrypted in accordance with the accompanying key params 
+                bytes               tome                        = 1;
+
+    // Optional -- used to identify how (or with what key) the KeyTome in KeyTomeCrypt.Tpme is encrypted.
+                KeyRef              key_ref                     = 10;
+                KeyInfo             key_info                    = 11;
+}

@@ -52,7 +52,7 @@ message Block {
     // A Block's label conforms to the context/protocol it's being used with (as applicable).
                 string              label                   = 1;
 
-    // Like a MIME type, this descriptor self-describes the data format of Block.content.
+    // Similar to a MIME type, this descriptor self-describes the data format of Block.content.
     // Anyone handed this Block uses this field to accurately process/deserialize its content.
     // This is a "multicodec path" -- see: https://github.com/multiformats/multistream
                 string              codec                   = 2;

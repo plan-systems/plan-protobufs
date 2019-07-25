@@ -107,7 +107,7 @@ enum MsgOp {
     ** Client -> MemberSession (sessID == 0)
     **/
 
-    // Msg.BUF0 is a ski.KeyTome protobuf that contains community keys that should be added to the member session on the repo side.
+    // Msg.BUF0 is a ski.KeyTomeCrypt protobuf that contains community keys that should be added to the member session on the repo side.
     ADD_COMMUNITY_KEYS          = 1;
 
     // When the repo sees this op, it will retain the community keyring up to the given unix timestamp in T0.
