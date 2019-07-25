@@ -622,37 +622,42 @@ message CommunityEpoch {
     // Official community name
                 string              community_name              = 2;
 
-    // Identifies the CryptoKit that members should/must use to sign newly authored entries.
+    // CryptoKit that members should/must use to sign newly authored entries.
                 ski.CryptoKitID     signing_crypto_kit          = 3;
+
+    // CryptoKit used for default crypto ops.
+                ski.CryptoKitID     default_crypto_kit          = 4;
+
+    // Hash kit used to hash PDI entries
+                ski.HashKitID       entry_hash_kit              = 5;
 
     // The community key associated with this epoch, identifying this epoch.
     // KeyInfo.KeyType_SymmetricKey
     // Note that KeyInfo.CryptoKit specified here is also used when generating member asymmetric keys 
-                ski.KeyInfo         key_info                    = 4;
+                ski.KeyInfo         key_info                    = 6;
 
     // Identifies this CommunityEpoch.
     // This value is the entryTID of the entry that bourne this CommunityEpoch (if applicable)
-                bytes               epochTID                    = 5;
+                bytes               epochTID                    = 7;
 
     // Names the ChannelEpoch being superseded. 
     // Set to nil if there was no previous epoch and this CommunityEpoch reflects community genesis.
-                bytes               prev_epochTID               = 6;
+                bytes               prev_epochTID               = 8;
 
-
-    // Hash kit used to hash PDI entries
-                ski.HashKitID       entry_hash_kit              = 7;
+    // This is how "standard" channels are discovered. 
+    repeated    plan.Link           links                       = 10;
 
     // Max delay (in secs) allowed between pdi.EntryInfo.TimeAuthored of an incoming entry
     //    and the TimeAuthored value of the most recently witnessed entry.  The idea is, how
     //    can entries arrive days or weeks and then a back-dated entry arrives (preventing 
     //    "submarine" attacks). 
     // Note: this only applies to non-private ACCs.
-                int64               max_member_latency          = 8;
+                int64               max_member_latency          = 30;
 
     // Max number of seconds that any two community peers could have different clock readings.
     // This value implies a dependency time "slop" for validation.  That is, no entry can be dependent on another
     //     entry that is more than this value in the future.  Beyond this, this is a causality inconsistency.
-                int64               max_member_clock_delta      = 9;
+                int64               max_member_clock_delta      = 31;
 
     // Max number of seconds delay between pdi.EntryInfo.TimeAuthored and its corresponding TxnInfo.TimeSealed.
     // Otherwise, entries that are sealed too late are auto-rejected during entry processing.
@@ -660,10 +665,7 @@ message CommunityEpoch {
     //     newly authored entries will be auto-rejected due to this security constraint.
     // Tier 0: posts to reserved community channels
     // Tier 1: posts to public ACCs 
-    repeated    int64               max_entry_latency           = 10;
-
-    // This is how "standard" channels are discovered. 
-    repeated    plan.Link           links                       = 20;
+    repeated    int64               max_entry_latency           = 32;
 
 }
 
