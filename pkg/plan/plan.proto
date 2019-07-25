@@ -98,7 +98,7 @@ message Link {
                 string              desc                        = 2;
 
     // See docs on PLAN URIs (above)
-                string              uri                         = 3;
+                string              URI                         = 3;
 
 }
 
