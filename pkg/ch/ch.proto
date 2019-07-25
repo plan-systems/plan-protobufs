@@ -24,6 +24,8 @@ enum SpaceOp {
     // If ModRGBA is set, then the given asset is modulated by the given RGBA value.
     PLACE_ASSET             = 0;
 
+    PLACE_LINK              = 3;
+
     // Assigns the given asset block to the specified asset ID.
     ASSIGN_ASSET            = 1;
 
@@ -42,10 +44,10 @@ enum TransformType {
     NONE                    = 0;
 
     // SpaceMsg.Transform[] is 3 elements: an XYZ offset added to input coordinates.
-    OFFSET_XYZ              = 1;
+    OFFSET_X_Y_Z            = 1;
 
     // SpaceMsg.Transform[] is 6 elements: 4 matrix elements followed by XY offsets added to transformed coordinates.
-    MATRIX_2X2_XY           = 2;
+    MATRIX_2X2_X_Y          = 2;
 
     // SpaceMsg.Transform[] is 16 elements and is a conventional XYZW perspective transformation matrix.
     MATRIX_4X4              = 3;
@@ -57,6 +59,7 @@ message SpaceMsg {
 
                 SpaceOp             op                          = 1;
                 plan.Block          asset                       = 2;
+                plan.Link           link                        = 3;
 
                 string              assetID                     = 5;
                 string              layerID                     = 6;
