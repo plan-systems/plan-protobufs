@@ -387,6 +387,9 @@ message ChStoreState {
     // All entry TIDs up to this point (and including this TID) are not pending active validation.
                 bytes               validated_upto              = 10;
 
+    // Incremented every time this struct is altered
+                int64               rev                         = 11;
+
 }
 
 
