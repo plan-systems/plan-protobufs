@@ -17,11 +17,11 @@ StorageProvider is the gRPC service interface for a community's append-only shar
 In addition to being a repository of community member txns/extrinsics, a StorageProvider (or set of
 StorageProviders), essentially serve as the community's validators, meaning they:
     (a) authenticate that a txn is officially part of the community record, and 
-    (b) seal *when* a txn became part of the record
+    (b) provide info on *when* a txn became part of the record
     
-Although the StorageProvider abstraction is modeled after a blockchain (an append-only db),
+Although the StorageProvider abstraction is modeled after a blockchain (an append-only data store),
 its implementation can either be centralized *or* decentralized.  This means a StorageProvider
-implementation could be a blockchain or a conventional centralized server/cluster.
+implementation could be, for example, a blockchain or a conventional centralized server/cluster.
 
 In the StorageProvider model (as with a conventional blockchain model), trust is externalized
 to outside the system by use of StorageProvider-maintained units of account: 
@@ -31,10 +31,10 @@ These units of account are solely a mechanism for controlling who has append acc
 generally managed via the standard procedures for admitting new members.
 
 Newcomers may be correctly point out that a blockchain/DLT model is a poor choice to model generalized storage.
-However, it's not the only storage abstraction in PLAN.  Allow us to introduce the Cloud File Interface:
+However, in addition to this persistent storage interface (PDI), PLAN has a "Cloud File Interface":
     https://github.com/plan-systems/design-docs/blob/master/PLAN-API-Documentation.md#Cloud-File-Interface
 
-And for more about StorageProvider:
+More on StorageProvider:
     https://github.com/plan-systems/design-docs/blob/master/PLAN-API-Documentation.md#Persistent-Data-Interface
 **********************************************************************************************************************/
 service StorageProvider {
