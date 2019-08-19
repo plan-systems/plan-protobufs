@@ -205,6 +205,7 @@ message TxnMetaInfo {
 message TxnScan {
 
     // Specifies the bounding timestamps (TxnInfo.TimeSealed) of txns to consider (inclusive).
+    // These values are standard unix timestamps (seconds elapsed since 00:00 Jan 1, 1970).
                 int64               timestamp_start             = 1;
                 int64               timestamp_stop              = 2;
   
