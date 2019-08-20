@@ -47,10 +47,10 @@ enum TransformType {
     OFFSET_X_Y_Z            = 1;
 
     // SpaceMsg.Transform[] is 6 elements: 4 matrix elements followed by XY offsets added to transformed coordinates.
-    MATRIX_2X2_X_Y          = 2;
+    MATRIX_X_Y              = 2;
 
     // SpaceMsg.Transform[] is 16 elements and is a conventional XYZW perspective transformation matrix.
-    MATRIX_4X4              = 3;
+    MATRIX_X_Y_Z            = 3;
 
 }
 
