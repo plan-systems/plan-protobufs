@@ -20,15 +20,20 @@ OUT_PATH=$3
 # Dir of where this script resides -- should be alongside all the available proto fiiles
 SELF_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
+OS=""
+if [[ "$OSTYPE" == "msys"* ]] || [[ "$OSTYPE" == "cygwin"* ]]; then
+    OS="windows"
+fi
+
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
     BIN_DIR="$SELF_DIR/Grpc.Tools/tools/linux_x64"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     BIN_DIR="$SELF_DIR/Grpc.Tools/tools/macosx_x64"
-elif [[ "$OSTYPE" == "cygwin"* ]]; then
+elif [[ "$OS" == "windows" ]]; then
     BIN_DIR="$SELF_DIR/Grpc.Tools/tools/windows_x64"
 else
-    echo "Unknown PLAN build environment ($OSTYPE)"
+    echo "Unknown PLAN build environment: $OSTYPE"
     exit
 fi
 
@@ -57,7 +62,7 @@ printf "$protoc_vers: %18s  --$PROTO_VERB-->  $proto_pathname\n" "$PKG_NAME"
 
 csharp_exe="$BIN_DIR/grpc_csharp_plugin"
 
-if [[ "$OSTYPE" == "cygwin"* ]]; then
+if [[ "$OS" == "windows" ]]; then
 	csharp_exe=$(cygpath -w "$csharp_exe")
 	proto_include=$(cygpath -w "$proto_include")
 	proto_pathname=$(cygpath -w "$proto_pathname")
