@@ -1,405 +1,234 @@
-
-// See http://github.com/plan-systems/plan-protobufs/
-
-
 syntax = "proto3";
-
 package repo;
 
-import "ski/ski.proto";
-import "plan/plan.proto";
-import "pdi/pdi.proto";
 
 
 
+// Node is a generic information schema that reflects a collection of abstract containers ("nodes") in relation to each other and nodes in other NodeSpace channels.
+// Each node has a set of associated fields and attributes, including spatial coordinates and references (links) to other nodes.
+message Node {
 
+    // ID is required and uniquely identifies a node.
+    // An ID can be any UTF8 string longer than 1 character, BUT CANNOT contain a forward slash ('/') or contain any whitespace characters. 
+                string              ID                          = 1;
 
-// Repo is the service offered by a PLAN pnode, a headless daemon that serves one or more "seeded" communities to clients. 
-service Repo {
+    // Layer, if non-nil, means this node can contain other nodes -- it is also dubbed a "node space"
+    // For nodes that have this Layer as the parent, their coordinates are relative to the coordinate space of this Node.
+    // Nested NodeLayers allow Node placements to occur with pluggable transformations.
+                NodeLayer           Layer                       = 2;
 
-    // Bootstraps a repo for a given member.
-    rpc         SeedRepo(RepoSeed)                                  returns (plan.Status);
-
-    // Starts a new client member session.
-    // The session ID returned from the resulting MsgOp_OK should be used for sending message to member session.
-    rpc         OpenMemberSession(MemberSessionReq)                 returns (stream Msg);
-
-    // Sends msgs to channel session or the root member session itself, via Msg.SessID. 
-    // A client typically only needs one open call to this because all outbound channel traffic plus messages to the 
-    // session that control the member session.
-    rpc         OpenMsgPipe(stream Msg)                             returns (plan.Status);
-
-
-
-    // Pins the FS item identified by a hashname to a local file system parent dir.
-    // When complete, a local pathname is returned containing the pinned FSItem/tree.
-    // This is why the graphical client and repo are on the same machine. 
-    // Maybe there could be such thing as a CFI node someday, but unlikely due to the pain
-    //    that the member session/repo has all of the security info.
-   // rpc         PinFSItem(FSItem)                               returns (stream PinStatus);
-
-}
-
-
-message MemberSessionReq {
-
-    // Identifies a workstation/client installation (metaphorical to a "dumb" terminal in the 70's and 80's).
-    // Two different members could have member sessions with the same workstation ID into a given repo (but not at the same time).
-                bytes               workstationID               = 1;
-
-    // Which community this session wants to access
-                bytes               communityID                 = 2;
-
-    // The client member's info
-                pdi.MemberEpoch     member_epoch                = 3;
-
-
-    // Optional -- used internally
-    //          string              repo_path                   = 4;
-
-    //          bytes               prev_session_token          = 4;
-    //          bytes               next_session_token          = 5;
-
-    // This will evolve in time, but in general, the client authenticates by submitting a token, 
-    //    which is a hash of biometric-based input (e.g. pin, password, key-fob, eye scan) plus 
-    //    a secure token from the previous session.
-    // This is used to create a symmetric key to encrypt/decrypt the member's primary key hive
-    //    that resides on the host.
-                bytes               passhash                    = 5;
-
-    // When the above symmetric key is created, it's placed it and other session info into a "secret box",
-    //    and is locked with a key only the host has has, and sent back as the "session token".
-    // This allows the client to present the session_token (until it expires) instead of the client 
-    //    having to perform full biometric authentication.
-                bytes               session_token               = 6;
-
-}
-
-
-
-
-
-enum ChSessionFlags {
-
-    // If set, entry bodies will be included
-    INCLUDE_BODY                = 0;
-
-    // IF set, entries that are deferred (in addition to live entries) are included.
-    DEFERRED_ENTRIES            = 1;
-
-    // If set, entries with op type EntryOp_POST_CONTENT will be sent
-    CONTENT_ENTRIES             = 2;
-
-    // If set, entries with op type EntryOp_NEW_CHANNEL_EPOCH will be sent.
-    NEW_EPOCH_ENTRIES           = 3;
-
-}
-
-
-
-
-enum MsgOp {
-
-    // This Msg functionally does nothing but serves as a heartbeat to indicate the channel session is open and operating normally. 
-    OK                          = 0;
-
-   /*****************************************************
-    ** Client -> MemberSession (sessID == 0)
-    **/
-
-    // Msg.BUF0 is a ski.KeyTomeCrypt protobuf that contains community keys that should be added to the member session on the repo side.
-    ADD_COMMUNITY_KEYS          = 1;
-
-    // When the repo sees this op, it will retain the community keyring up to the given unix timestamp in T0.
-    // If the community keyring should not be retained, set T0 to 0 (or any timestamp in the past),
-    RETAIN_COMMUNITY_KEYS       = 2;
-
-    // Sent in response to a CH_NEW_ENTRY_READY (to the repo)
-    // Msg.ITEMS is a list of raw txns of an entry ready to be committed.
-    COMMIT_TXNS                 = 3;
-
-    // Requests the latest pdi.ChInfo for the given or current channel ID.
-    // If sessID == 0, BUF0 is a ChID
-    // If sessID > 0, BUF0 is ignored (and the ChID of open channel is used)
-    // Response: is a pdi.ChInfo
-    LATEST_CH_INFO              = 4;
-
-    // Requests the latest pdi.ChannelEpoch for the given or current channel ID.
-    // Response: is a pdi.ChannelEpoch
-    LATEST_CH_EPOCH             = 5;
+    // Tags is a collection of UTF8 identifying strings delimited by a comma (',').
+    // This offers a flexible and lightweight system to filter hits during NodeScan()
+                string              Tags                        = 4;
     
-    // BUF0 is a marshalled plan.ChInvocation
-    START_CH_SESSION            = 6;
+    // LastModified is a timestamp of when this node was last altered (in UTC seconds).
+    // By default, this field is auto-updated during NodePut().
+                int64               LastModified                = 7;
 
+    // Optional values that can express commonly needed fields or allow this Node to be self-describing.
+                string              TypeID                      = 10;
+                string              Glyph                       = 11;
+                string              Name                        = 12;
+                string              Value                       = 13;
 
-   /*****************************************************
-    ** MemberSession (sessID == 0) -> Client
-    **/
+    // X1,.. are coordinates expressed in the parent's coordinate space.
+    // Shoutout to the 3 domains that reflect all theoretical completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s).
+    // Special thanks to Michael at Vsauce: https://www.youtube.com/watch?v=SrU9YDoXE88
+                double              X1                          = 21;
+                double              X2                          = 22;
+                double              X3                          = 23;
 
-    // Sent to the client following OpenMemberSession.
-    MEMBER_SESSION_READY        = 7;
+    // Transform means this Node and its sub nodes should be scaled by [0] (or [0,1,2]) and rotated according to thw quaternion stored in [1,2,3,4] (or [3,4,5,6])
+    // If omitted, implied scale is 1 and there no rotation is applied.
+    repeated    float               Transform                   = 25;
 
-    // Sent in response to a COMMIT_TXNS (to the client)
-    // msg.EntryInfo and msg EntryState contain info associated with the given txn (may be nil)
-    COMMIT_TXNS_COMPLETE        = 8;
+    // T is a time offset expressed in seconds.
+    // A Node's parent layer defines how T=0 maps onto UTC, offering greater of precision (where precision would otherwise be "burned up" by expressing large time value).
+                double              T                           = 28;
 
-    // Sent to the member session when a new channel is to be created.  
-    // BODY is a ChannelEpoch
-    CH_GENESIS_ENTRY            = 9;
+    // TSpan is a time duration or period expressed in seconds.
+                double              TSpan                       = 29;
 
+    // Links are URIs to other linked nodes.
+    // [<ChURI>[<ParentLayerID>/]]<NodeID>
+    repeated    string              Links                       = 40;
 
-   /*****************************************************
-    ** Client -> ChSession (sessID > 0)
-    **/
-
-    // Closes the session associated with the session ID.  Any subsequent Msgs addressed to this session ID will be ignored/dropped.
-    CLOSE_CH_SESSION            = 10;
-
-    // Sent by the client when the user wishes to author a new content entry in the channel associated with this sessID.
-    // The msg's EntryInfo contains basic info about the entry to build from.
-    POST_CH_ENTRY               = 11;
-
-    // The ChSession seek to T0 and start returning a stream of CH_ENTRY msgs, effectively "replaying" the channel.
-    // The param FLAGS contains number of ChSessionFlags
-    RESET_ENTRY_READER          = 12;
-
-    RESERVED_13                 = 13;
-    RESERVED_14                 = 14;
-
-   /*****************************************************
-    ** ChSession -> Client
-    **/
-
-    // Sent to the client when the channel is closed
-    CH_SESSION_CLOSED           = 15;
-
-    // The msg's EntryInfo is set and reflects an entry in the channel and BUF0 is the body.
-    CH_ENTRY                    = 16;
-
-    // Sent when an entry changes liveness
-    CH_ENTRY_UPDATE             = 17;
-
-    // Sent in response to a POST_CH_ENTRY or CH_GENESIS_ENTRY to the client.
-    // The msg's EntryInfo is ready to be encoded and encrypted with the body.
-    // From there, client is expected to:
-    //   1) pack+sign the readied EntryInfo with the entry body
-    //   2) encrypt this newly generated "payload buffer" with the community key associated with CommunityEpoch cited in the EntryInfo
-    //   3) Marshal the encrypted payload and community epoch ID into the final EntryCrypt.
-    //   4) Encode the EntryCrypt into StorageProvider txns
-    //   5) Submit the resulting txn(s) to the repo via COMMIT_TXNS.
-    CH_NEW_ENTRY_READY          = 18;
-
-    RESERVED_19                 = 19;
-    RESERVED_20                 = 20;
-
-   /*****************************************************
-    ** Workstation -> Client
-    **/
-
-    // Send by the Workstation to the client.
-    // BUF0 is a phost,WsLogin protobuf.
-    // The client echos this msg back to the workstation on success.
-    LOGIN_TO_WS_SEAT            = 21;
+    // Nodes are corresponding elements of .Links (above) resolved/expanded.
+    // This is only used for a server to return this.Links in their resolved form.
+    // See use of LinksFetchFlags in NodeScanReq.
+    repeated    Node                LinksResolved               = 41;
 
 
 
-}
+    //
+    // Opaque payload/content attachments
+    //
+
+    // Block is any client data payload (and is generally not accessed by redwood).
+    // When non-nil, it is assumed to be the output of this.BlockRaw.Unmarshal()
+                Block               Block                       = 50;
+
+    // BlockRaw is the protobufs serialization of this.Block.
+    // When non-nil, it is assumed to be the output of this.Block.Marshal()
+                bytes               BlockRaw                    = 51;
 
 
 
+    //
+    // Meta-fields -- these fields are not stored and are used by the client and server to communicate Node information.
+    //
+
+    // ParentID is the ID of the Node layer that this Node entry appears in (and whose fields are transformed through that layer).
+    // If this field is empty or nil, the identity/default layer ID and is assumed (and is denoted as '!')
+    // This field is NOT stored directly (as it is exists implicitly):
+    //      - when set by a server (by request via FetchFlags), it is recovered from internal server db info.
+    //      - when set by a client, the client is specifying which parent this node resides in.
+                string              ParentID                    = 60;
+
+    // ChURI is the channel state URI for this node.
+    // This is only used during RPC.ChannelGenesis() and RPC.PutNode() to express a destination ChURI.
+                string              ChURI                       = 61;
+
+} 
 
 
 
-message Msg {
+// NodeLayer is a container for Nodes and can be regarded as a "column" object (where Nodes in this layer can be considered rows).
+// A node with this NodeLayer's Node.ID as its parent means its coordinates are defined according to the parent layer.
+message NodeLayer {
 
-    // If originating from the client, this ID should be set to a unique, increasing ID.
-    // All Msgs emitted in response to a previous Msg will cite its original ID, allowing the client to filter for a specific ID.
-                uint32              ID                          = 1;
+    // T0AsUTC expresses the UTC time index (in seconds) of a Node at T = 0.
+    // This means a NodeLayer can be anchored to any point on the UTC timeline with double precision accuracy.  
+    // This allows a time series of nodes to reside at any conceivable time scale: the planck scale or the timescale of the universe, 14 billion years.
+                double              T0AsUTC                     = 5;
 
-    // Describes the purpose of this op, what args it uses, and what it's intended to do.
-                MsgOp               op                          = 2;
+    // SpaceType specifies the implicit geometry baked into coordinates of nodes in this layer.
+    // It designates a particular of 1D, 2D, 3D topography or coordinate system.
+    // e.g. "cartesian/xyz", "cylindrical/angle-r-z", "spherical/r-theta-phi", "geospace-earth/lat-long-alt"
+                string              SpaceType                   = 10;
 
-    // When a Msg originates, this value is used to route it to the correct internal channel session.
-    // If 0, this msg is to/from the MemberSession itself for control messages, etc.  
-                uint32              ch_sessID                   = 3;
+    // X1UnitType is a unit MIME type descriptor
+    // e.g. "angle/degrees", "distance/meters", "mass/kilograms", "temperature/celsius", "charge/amp-hours", "energy/kw-hours", "wisdom/years"
+                string              X1UnitType                  = 31;
+                string              X2UnitType                  = 32;
+                string              X3UnitType                  = 33;
 
-    // If the op involves a channel entry, then it will be set here.
-                pdi.EntryInfo       entry_info                  = 10;
-                EntryState          entry_state                 = 11;
-
-    // If set, the op failed for the given reason
-                string              error                       = 12;
-
-    // Params for the given MsgOp
-                int64               T0                          = 20;
-                uint32              FLAGS                       = 21;
-                bytes               BUF0                        = 22;
-    repeated    bytes               ITEMS                       = 23;
-
-}
-
-
-
-message GenesisSeed {
-                pdi.StorageEpoch    storage_epoch               = 1;
-                pdi.CommunityEpoch  community_epoch             = 2;
-}
-
-
-message RepoConfig {
-
-}
-
-
-message RepoSeed {
-                bytes               signed_genesis_seed         = 1;
-    
-                string              suggested_dir_name          = 2;
-                string              community_name              = 3;
-                
-    repeated    plan.ServiceInfo    services                    = 5;
+    // Curvature describes the unit curvature -- WIP
+    //  N means curved aka periodic (curved, with radius 1/N)
+    //  0 means linear (euclidean)
+    // -N means hyperbolic (with horizon -1/N)
+                // string              X1Curvature                 = 31;
+                // string              X2Curvature                 = 32;
+                // string              X3Curvature                 = 33;
 
 
 }
 
 
 
+// High-level RPC for PLAN.
+service RPC {
+    rpc         ChannelGenesis(ChannelGenesisReq)               returns (TxInfo);
+    rpc         ChangeUserPerms(ChangeUserPermsReq)             returns (TxInfo);
+
+    // NodeGet returns the node with the given ChURI, parent node ID, and node ID.
+    // Assuming the given ChURI is valid for reading, an empty Node (Node.ID == nil) is returned if the parent or node ID does not exist. 
+    rpc         NodeGet(NodeGetReq)                             returns (Node);
+
+    rpc         NodeScan(NodeScanReq)                           returns (stream Node);
+    rpc         NodePut(NodePutReq)                             returns (TxInfo);
+}
 
 
-// A community issues this to a person they want to invite into their community.  A copy of this record is written to member registry channel.
-// This is passed in the clear and is used by a prospective member or guest's client to connect to a community.
-message MemberSeed {
-                RepoSeed            repo_seed                   = 1;
+message ChannelGenesisReq {
+                Node                ChRoot                      = 1;
+}
 
-    // Exported and exported ski.KeyTome containing all keys needed for the recipient member.
-                bytes               key_tome                    = 3;
+message TxInfo {
+                string              StateURI                    = 1;
+                bytes               TxID                        = 2;
+}
 
-                pdi.MemberEpoch     member_epoch                = 6;
+message ChangeUserPermsReq {
+                string              ChURI                       = 1;
+                string              Address                     = 2;
+                string              WriteKeypathsRegex          = 3;
+                bool                CanWrite                    = 4;
+}
 
-    // WHO sent this invitation (note: the member's signing key is used to create this invite)
-                fixed64             origin_memberID             = 7;
-                ski.KeyInfo         origin_signing_key          = 8;
+// NodeGetReq contains the parameters for a single Node to be fetched.
+message NodeGetReq {
+                string              ChURI                       = 1;
+                string              ParentID                    = 2;
+                string              NodeID                      = 3;
 
-    // A asym key used to encrypt an InvitationResponse
-    //            ski.KeyInfo         reply_to                    = 9;
+    // NodeFetchFlags specifies which fields are loaded and returned for each Node scan match/hit returned by NodeScan().          
+                FetchFlags          NodeFetchFlags              = 40;
 
+    // LinksFetchFlags specifies which fields are loaded and returned for linked nodes of each Node hit returned by a NodeScan(). 
+                FetchFlags          LinksFetchFlags             = 41;
+}
+
+// FetchFlags specifies what parts of a Node are loaded and returned during a NodeScan.
+// Note these are bit-ORed together (and is not a normal enum)
+enum FetchFlags {
+    NONE                = 0;
+    FIELDS              = 1;
+    LINKS               = 2;
+    LINKS_RESOLVED      = 4;
+    BLOCK               = 8;
+    BLOCK_DECODED       = 16;
+}
+
+// FilterFlags specifies various options for NodeScan.
+enum FilterFlags {
+    NO_SEARCH           = 0;
+    LAYERS_ONLY         = 1;
+    EXCLUDE_LAYERS      = 2;
+}
+
+
+message NodeScanReq {
+                string              ChURI                       = 1;
+
+    // Note that "!" is used to denote ChURI's default (root) node ID.
+    // FUTURE: should this instead just be any valid parent node ID pathname?
+                string              RegexParentID               = 3;
+
+    // Filters to apply to each node candidate
+                string              RegexNodeID                 = 10;
+                string              RegexName                   = 11;
+                string              RegexTags                   = 12;
+                string              RegexTypeID                 = 13;
+
+    // FilterFlags further selects which Nodes are eligible to be scan hits. 
+                FilterFlags         FilterFlags                 = 14;
+
+    // Subscribe specifies if this scan should remain open and await additional hits that may appear as state is updated. 
+                bool                Subscribe                   = 20;
+
+    // Min/max time search params (no search if TMax > TMin)
+                double              TMin                        = 30;
+                double              TMax                        = 31;
+
+    // See NodeGetReq
+                FetchFlags          NodeFetchFlags              = 40;
+                FetchFlags          LinksFetchFlags             = 41;
 }
 
 
 
+message NodePutReq {
 
-/*****************************************************
-** Internal
-**/
+    // Nodes is a list of Nodes to be put (in order).
+    // NodePut() will first merge these Nodes in the order they appear (or will no-op if this list is nil or empty).
+    // All values of Node.ChURI must be equal or an error is returned (excluding empty/omitted URIs which denotes deferring to another Node.ChURI)
+    repeated    Node                Nodes                       = 5;
 
-
-
-
-enum EntryStatus {
-
-    // The given entry has been confirmed to be associated with unauthorized activity, a security breach, or inappropriate behavior.
-    DISBARRED                   = 0;
-
-    // This entry has yet to merged into the repo's channel subsystem. 
-    AWAITING_MERGE              = 1;
-
-    // This entry has been merged into the channel. 
-    MERGED                      = 2;
-
-    // The given entry is deferred as a result of one of many possibilities encountered during 
-    // channel entry validation (see design-docs/PLAN-Proof-of-correctness.md). Specifically, 
-    // this means EntryState.Flags lacks one or more req'd flags in order for the entry to be live.
-    DEFERRED                    = 3;
-
-    // The given entry is considered authentic and a live operating part of the local community repo.
-    // The corresponding EntryState.Flags contains all the flags required for an entry to be live.
-    LIVE                        = 4;
-}
-
-
-
-// EntryFlags are bit shift values (not actual values)
-enum EntryFlag {
-
-    // If not set, one or more parts of this entry are not self-consistent and/or do not self-validate.
-    // By definition, once this flag is cleared, it will never reappear.
-    WELL_FORMED                 = 0;
-
-    // Set when this entry's author dependency has been written
-    AUTHOR_DEPENDENCY_WRITTEN   = 1;
-
-    // Set when this entry's ACC dependency has been written
-    ACC_DEPENDENCY_WRITTEN      = 2;
-
-    // Set if this entry's URID appears in the community's list of genesis entries.
-    GENESIS_ENTRY_VERIFIED      = 3;
-
-    // Set if this entryOp == NEW_CHANNEL_EPOCH and has no previous channel epoch TID set.
-    IS_CHANNEL_GENESIS          = 4;
+    // Node is a node to be put.
+    // NodePut() will merge this Node (or will no-op if this Node is nil).
+    // This field is offered as convenience and is equivalent to putting this node at the end of .Nodes[]
+                Node                Node                        = 6;
 
 }
-
-
-
-
-message EntryState {
-
-    // Incremented each time this entry is mutated.
-
-                uint32              flags                       = 1;       // Union of ChEntryFlags
-
-                EntryStatus         status                      = 2;
-
-    // IF len() == 0, the implied body TID is the same as the entry info's TID (done to save space)
-    // When entry 1 is superseded by entry 2, entry 2's TID appears in entry 1's EntryState.
-                bytes               liveIDs                     = 10;
-
-}
-
-
-
-
-message ChMgrState {
-
-    // Incremented each time an entry is reversed/overturned.
-    // This supports revalidation bookkeeping (triggered by a reversed entry)
-                int64               validation_rev              = 1;
-
-}
-
-
-
-
-
-message ChStoreState {
-
-                bytes               chID                        = 1;
-
-        // ChProtocol is the channel protocol identifying how clients should interpret content entries in this channel. 
-        // Its value and originates from this channel's genesis ChannelEpoch and is regarded as immutable.
-        // If not set, then channel content entries arrived *before* the genesis ChannelEpoch and so the protocol is still unknown.
-                string              ch_protocol                 = 2;
-
-        // This identifies what agent type/class last maintained this channel (or empty if no agent has ever been assigned).
-        // This exists so that if/when a different agent is assigned, it can be used to trigger full channel revalidation.
-                string              assigned_agentID            = 3;
-
-    // All entry TIDs up to this point (and including this TID) are not pending active validation.
-                bytes               validated_upto              = 10;
-
-    // Incremented every time this struct is altered
-                int64               rev                         = 11;
-
-}
-
-
-
-
-message ChDependency {
-
-    // Time index (and later) of applicable channel entries 
-                int64               dep_time                    = 1;
-
-}
-
 
