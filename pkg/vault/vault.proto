@@ -1,0 +1,140 @@
+syntax = "proto3";
+package vault;
+
+
+// High-level append-only feed server RPC.
+service RPC {
+
+    // ServeFeed allows a client to stream entries in a given feed URI.  
+    // This model is that the client submits requests and the server executes them, streaming entry data and completion status updates.
+    // The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
+    rpc         ServeFeed(stream FeedMsg)                       returns (stream FeedMsg);
+
+
+}
+
+
+
+
+
+// FeedMsgOp tells a holder of a FeedMsg how to interpret its fields.
+// The implicit context is if it's a message a server sends to a client or vice versa.
+enum FeedMsgOp {
+
+
+    /*
+    ** 
+    ** 
+    ** SERVER => CLIENT
+    ** 
+    ** 
+    **/
+
+    // RecvEntry tells the recipient that FeedMsg entry is the next block in this feed.
+    RecvEntry               = 0;
+
+    // ReqComplete means the referenced request (via FeedMsg.ReqID) has successfully completed.
+    ReqComplete             = 1;
+
+    // ReqDiscarded means the referenced request failed and/or has been cancelled.
+    // FeedMsg.EntryData is a serialized ReqErr. 
+    ReqDiscarded            = 2;
+
+    // RecvCheckpoint signals that the opaque token contained in FeedMsg.MetaStr can be used to resume the feed stream at this point.
+    // This value is intended to be used by ResumeFeedAt.
+    RecvCheckpoint          = 10;
+
+    // SyncComplete means the feed is up to date and is now awaiting new feed entires from peers.
+    SyncComplete            = 11;
+
+
+    /*
+    ** 
+    ** 
+    ** CLIENT => SERVER
+    ** 
+    ** 
+    **/
+
+    // OpenFeed opens a given feed URI for subsequent access.
+    // FeedMsg.EntryData is a serialized OpenFeedReq. 
+    // Streaming of that feed does not occur until RestartFeedAt.
+    OpenFeed                = 30;
+
+    // ResumeFeedAt resets the stream head of the feed to the given checkpoint string specified in FeedMsg.MetaStr.
+    // If FeedMsg.EntryID == -1, then the server will only send EntryIDs (EntryData and EntryCodec will be nil) 
+    ResumeFeedAt            = 31;
+
+    // CloseFeed tells the server to cancel the FeedReq referenced by FeedReq.ReqID.
+    CloseFeed               = 35;
+
+    // AppendEntry tells the server to append EntryCodec+EntryData to the currently open feed referenced by FeedReq.ReqID.
+    AppendEntry             = 40; 
+
+}
+
+
+
+
+
+// FeedMsg is the generalized response object a server sends to the client as it processes each FeedReq sent by the client. 
+// FeedMsg are  ERVER => CLIENT messages
+message FeedMsg {
+
+    // MsOp tells the client how to interpret the fields in this FeedMsg.
+                FeedMsgOp           MsgOp                       = 1;
+                
+    // ReqID is set to value the originating FeedReq.ReqID was set to.
+                uint32              ReqID                       = 2;
+    
+    // MetaStr is a multi-purpose field used to communicate meta information that is not part of entry data -- varies per FeedMsgOp.
+                string              MetaStr                     = 3;
+
+    // EntryCodec specifies the type and encoding of FeedMsg.Entry set by the originating client.
+    // FeedMsg.Entry and FeedMsg.EntryCodec originate from a client using FeedReqOp.Append.
+    // Note: negative values are reserved for feed infrastructure internal use and can be ignored by the client.
+                int32               EntryCodec                  = 10;
+
+    // EntryData is the content buffer.
+                bytes               EntryData                   = 11;
+
+    // EntryID identifies a particular entry in this feed during this session.
+                int64               EntryID                     = 12;
+}
+
+
+// ErrCode is used to unambiguously express common errors.
+enum ErrCode {
+    NoErr                       = 0;
+
+    UnnamedErr                  = 5000;
+    FeedReqCancelled            = 5001;
+
+    InsufficientPermissions     = 5101;
+    
+    FeedReqNotFound             = 5010;
+    FeedReqIDInUse              = 5011;
+    InvalidFeedURI              = 5020;
+    FeedNotFound                = 5021;
+    FeedAlreadyExists           = 5022;
+}
+
+
+// ReqErr wraps any error and is typically used in conjunction with FeedMsgOp.FeedReqDiscarded
+message ReqErr {
+                ErrCode             Code                        = 1;
+                string              Msg                         = 2;
+}
+
+
+message OpenFeedReq {
+
+    // FeedURI is the feed name to be opened.  
+    // By convention, a feed URI a case-sensitive, UTF8, POSIX-style pathname with no leading or trailing slashes.
+                string              FeedURI                     = 1;
+
+    // GenesisEntry signals to create a new feed.
+    // If non-nil, FeedURI should be created and this entry should be the first entry appended to it.
+                FeedMsg             GenesisEntry                = 10;
+
+}
