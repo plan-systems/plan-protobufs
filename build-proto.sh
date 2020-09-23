@@ -53,6 +53,15 @@ fi
 
 proto_include="$SELF_DIR/pkg"
 proto_pathname="$proto_include/$PKG_NAME/$PKG_NAME.proto"
+# proto_include="$INCLUDE_PATH"
+
+# # If no leading slash, make pathname relative to parent of this script
+# if [[ "${SRC_PROTO_PATHNAME:0:1}" == "/" ]]; then
+#     proto_pathname="$SRC_PROTO_PATHNAME"
+# else
+#     proto_pathname="$SELF_DIR/$SRC_PROTO_PATHNAME"
+# fi
+# proto_include="$(dirname "$proto_pathname")"
 
 #echo "include::::::::: $proto_include"
 #echo "OUT ---> $OUT_PATH"
