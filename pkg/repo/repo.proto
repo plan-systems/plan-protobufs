@@ -3,7 +3,7 @@ package repo;
 
 
 // High-level channel repository RPC.
-service RPC {
+service RepoGrpc {
 
     // ServeChannel opens the specified channel at a given state and executes a stream of requests from the client.
     // The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
@@ -64,7 +64,7 @@ message ChReq {
     // ReqID is an optional client-assigned ID typically used by the client to determine the originating request that generated a particular ChMsg.
                 int32               ReqID                       = 2;
 
-    // ChOp requests that the given op to be execute on ChReq.Entries
+    // ReqOp requests that the given op to be execute on ChReq.Entries
                 ChReqOp             ReqOp                       = 5;
 
     // Entries are the operands of ChReq.ChOp.
@@ -85,7 +85,7 @@ enum ChMsgOp {
     Recv                = 0;
 
     // ChReqDiscarded means the referenced ChReq failed and/or has been cancelled.
-    // ChMsg.Entry.Attachment is a serialized ChReqErr. 
+    // If ChMsg.Entry.EntryData != nil, then is a serialized ChReqErr describing why it was discarded.
     ChReqDiscarded      = 1;
 
     // ChReqComplete means the referenced ChReq (via ChMsg.ReqID) has successfully completed.

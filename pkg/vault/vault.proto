@@ -2,14 +2,13 @@ syntax = "proto3";
 package vault;
 
 
-// High-level append-only feed server RPC.
-service RPC {
+// High-level append-only feed server.
+service VaultGrpc {
 
     // ServeFeed allows a client to stream entries from a given feed URI.  
     // This model is that the client submits requests and the server executes them, streaming entry data and completion status updates.
     // The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
     rpc         ServeFeed(stream FeedMsg)                       returns (stream FeedMsg);
-
 
 }
 
@@ -41,7 +40,6 @@ enum FeedMsgOp {
     ReqDiscarded            = 2;
 
 
-
     /*
     ** 
     ** 
@@ -63,7 +61,6 @@ enum FeedMsgOp {
     AppendEntry             = 40; 
 
 }
-
 
 
 // FeedMsg is the generalized response object a server sends to the client as it processes each FeedReq sent by the client. 
@@ -91,7 +88,6 @@ message FeedMsg {
 }
 
 
-
 enum StreamMode {
 
     // DontStream means the server should not stream any entries.
@@ -112,7 +108,6 @@ enum StreamMode {
     // AfterHead tells the server to resume after the latest entry in this feed.
     // VaultCtx and SeekEntryID are ignored.
     AfterHead               = 7;
-
 }
 
 
@@ -141,9 +136,7 @@ message OpenFeedReq {
     // GenesisEntry signals to create a new feed.
     // If non-nil, FeedURI should be created and this entry should be the first entry appended to it.
                 FeedMsg             GenesisEntry                = 10;
-
 }
-
 
 
 // ErrCode is used to unambiguously express common errors.
@@ -165,7 +158,6 @@ enum ErrCode {
     UnrecognizedVaultCtx        = 5030;
 
 }
-
 
 // ReqErr wraps any error and is typically used in conjunction with FeedMsgOp.ReqDiscarded
 message ReqErr {
