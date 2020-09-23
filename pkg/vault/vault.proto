@@ -52,7 +52,7 @@ enum FeedMsgOp {
 
     // OpenFeed opens a given feed URI for access. 
     // FeedMsg.MsgData is a serialized OpenFeedReq. 
-    // In response ReqComplete message, FeedMsg.MetaStr is a "EntryIDCtx" token needed for a future OpenFeed call.
+    // In response ReqComplete message, FeedMsg.MetaStr is a "VaultCtx" token needed for a future OpenFeed call.
     OpenFeed                = 30;
 
     // CloseFeed tells the server to cancel/stop/close the OpenFeedReq associated with FeedReq.ReqID.
@@ -96,11 +96,11 @@ enum ResumeMode {
 
     // DontStream means the server should not stream any entries.
     // This mode is used by clients that only want to append entries to a feed. 
-    // EntryIDCtx and ResumeEntryID are ignored.
+    // VaultCtx and ResumeEntryID are ignored.
     DontStream              = 0;
 
     // FromGenesis tells the server to start streaming from the very beginning of the feed.  
-    // EntryIDCtx and ResumeEntryID are ignored.
+    // VaultCtx and ResumeEntryID are ignored.
     FromGenesis             = 1;
 
     // AtEntry tells the server to stream starting with ResumeEntryID.
@@ -110,7 +110,7 @@ enum ResumeMode {
     AfterEntry              = 5;
 
     // AfterHead tells the server to resume after the latest entry in this feed.
-    // EntryIDCtx and ResumeEntryID are ignored.
+    // VaultCtx and ResumeEntryID are ignored.
     AfterHead               = 7;
 
 }
@@ -125,8 +125,8 @@ message OpenFeedReq {
     // ResumeMode specifies if and where the server should start streaming feed entries.
                 ResumeMode          ResumeMode                  = 3;
 
-    // EntryIDCtx provides context for ResumeFromEntryID
-                string              EntryIDCtx                  = 5;
+    // VaultCtx provides context for ResumeFromEntryID
+                string              VaultCtx                    = 5;
 
     // ResumeEntryID tells the server where to resume streaming.
                 int64               ResumeEntryID               = 6;
@@ -162,7 +162,7 @@ enum ErrCode {
     FeedNotFound                = 5021;
     FeedAlreadyExists           = 5022;
 
-    UnrecognizedEntryCtx        = 5030;
+    UnrecognizedVaultCtx        = 5030;
 
 }
 
