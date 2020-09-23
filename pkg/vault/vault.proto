@@ -52,7 +52,7 @@ enum FeedMsgOp {
 
     // OpenFeed opens a given feed URI for access. 
     // FeedMsg.MsgData is a serialized OpenFeedReq. 
-    // In response ReqComplete message, FeedMsg.MetaStr is a "ResumeCtx" token needed for a future OpenFeed call.
+    // In response ReqComplete message, FeedMsg.MetaStr is a "EntryIDCtx" token needed for a future OpenFeed call.
     OpenFeed                = 30;
 
     // CloseFeed tells the server to cancel/stop/close the OpenFeedReq associated with FeedReq.ReqID.
@@ -91,38 +91,16 @@ message FeedMsg {
 }
 
 
-// ErrCode is used to unambiguously express common errors.
-enum ErrCode {
-    NoErr                       = 0;
-
-    UnnamedErr                  = 5000;
-    FeedReqCancelled            = 5001;
-
-    InsufficientPermissions     = 5101;
-
-    FeedReqNotFound             = 5010;
-    FeedReqIDInUse              = 5011;
-    InvalidFeedURI              = 5020;
-    FeedNotFound                = 5021;
-    FeedAlreadyExists           = 5022;
-}
-
-
-// ReqErr wraps any error and is typically used in conjunction with FeedMsgOp.ReqDiscarded
-message ReqErr {
-                ErrCode             Code                        = 1;
-                string              Msg                         = 2;
-}
 
 enum ResumeMode {
 
     // DontStream means the server should not stream any entries.
     // This mode is used by clients that only want to append entries to a feed. 
-    // ResumeCtx and ResumeEntryID are ignored.
+    // EntryIDCtx and ResumeEntryID are ignored.
     DontStream              = 0;
 
     // FromGenesis tells the server to start streaming from the very beginning of the feed.  
-    // ResumeCtx and ResumeEntryID are ignored.
+    // EntryIDCtx and ResumeEntryID are ignored.
     FromGenesis             = 1;
 
     // AtEntry tells the server to stream starting with ResumeEntryID.
@@ -132,7 +110,7 @@ enum ResumeMode {
     AfterEntry              = 5;
 
     // AfterHead tells the server to resume after the latest entry in this feed.
-    // ResumeCtx and ResumeEntryID are ignored.
+    // EntryIDCtx and ResumeEntryID are ignored.
     AfterHead               = 7;
 
 }
@@ -147,8 +125,8 @@ message OpenFeedReq {
     // ResumeMode specifies if and where the server should start streaming feed entries.
                 ResumeMode          ResumeMode                  = 3;
 
-    // ResumeCtx provides context for ResumeFromEntryID
-                string              ResumeCtx                   = 5;
+    // EntryIDCtx provides context for ResumeFromEntryID
+                string              EntryIDCtx                  = 5;
 
     // ResumeEntryID tells the server where to resume streaming.
                 int64               ResumeEntryID               = 6;
@@ -164,4 +142,33 @@ message OpenFeedReq {
     // If non-nil, FeedURI should be created and this entry should be the first entry appended to it.
                 FeedMsg             GenesisEntry                = 10;
 
+}
+
+
+
+// ErrCode is used to unambiguously express common errors.
+enum ErrCode {
+    NoErr                       = 0;
+
+    UnnamedErr                  = 5000;
+    FeedReqCancelled            = 5001;
+
+    InsufficientPermissions     = 5101;
+
+    ReqNotFound                 = 5010;
+    ReqInUse                    = 5011;
+
+    InvalidFeedURI              = 5020;
+    FeedNotFound                = 5021;
+    FeedAlreadyExists           = 5022;
+
+    UnrecognizedEntryCtx        = 5030;
+
+}
+
+
+// ReqErr wraps any error and is typically used in conjunction with FeedMsgOp.ReqDiscarded
+message ReqErr {
+                ErrCode             Code                        = 1;
+                string              Msg                         = 2;
 }
