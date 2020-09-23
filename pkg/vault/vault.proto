@@ -29,7 +29,7 @@ enum FeedMsgOp {
     ** 
     **/
 
-    // RecvEntry tells the recipient that FeedMsg entry is the next block in this feed.
+    // RecvEntry delivers the next entry in the feed.
     RecvEntry               = 0;
 
     // ReqComplete means the referenced request (via FeedMsg.ReqID) has successfully completed.
@@ -55,7 +55,7 @@ enum FeedMsgOp {
     // In response ReqComplete message, FeedMsg.MetaStr is a "ResumeCtx" token needed for a future OpenFeed call.
     OpenFeed                = 30;
 
-    // CloseFeed tells the server to cancel the FeedReq associated with FeedReq.ReqID.
+    // CloseFeed tells the server to cancel/stop/close the OpenFeedReq associated with FeedReq.ReqID.
     CloseFeed               = 35;
 
     // AppendEntry tells the server to append EntryCodec+MsgData to the currently open feed referenced by FeedReq.ReqID.
@@ -67,7 +67,6 @@ enum FeedMsgOp {
 
 
 // FeedMsg is the generalized response object a server sends to the client as it processes each FeedReq sent by the client. 
-// FeedMsg are  ERVER => CLIENT messages
 message FeedMsg {
 
     // MsOp tells the client how to interpret the fields in this FeedMsg.
