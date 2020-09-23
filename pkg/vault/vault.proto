@@ -119,6 +119,7 @@ enum ResumeMode {
 
     // DontStream means the server should not stream any entries.
     // This mode is used by clients that only want to append entries to a feed. 
+    // ResumeCtx and ResumeEntryID are ignored.
     DontStream              = 0;
 
     // FromGenesis tells the server to start streaming from the very beginning of the feed.  
@@ -134,6 +135,7 @@ enum ResumeMode {
     // AfterHead tells the server to resume after the latest entry in this feed.
     // ResumeCtx and ResumeEntryID are ignored.
     AfterHead               = 7;
+
 }
 
 
