@@ -2,233 +2,191 @@ syntax = "proto3";
 package repo;
 
 
+// High-level channel repository RPC.
+service RPC {
+
+    // ServeChannel opens the specified channel at a given state and executes a stream of requests from the client.
+    // The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
+    rpc         ServeChannel(stream ChReq)                      returns (stream ChMsg);
+
+}
 
 
-// Node is a generic information schema that reflects a collection of abstract containers ("nodes") in relation to each other and nodes in other NodeSpace channels.
-// Each node has a set of associated fields and attributes, including spatial coordinates and references (links) to other nodes.
-message Node {
+// ChReqOp is a code describing the purpose and format of the ChReq that it resides in.
+enum ChReqOp {
+    NoOp                    = 0;
 
-    // ID is required and uniquely identifies a node.
-    // An ID can be any UTF8 string longer than 1 character, BUT CANNOT contain a forward slash ('/') or contain any whitespace characters. 
-                string              ID                          = 1;
+    Get                     = 1;    // Get the entry at <Keypath>
+    GetShallow              = 2;    // Shallow iterate through <Keypath>
+    GetDeep                 = 3;    // Deep iterate through <Keypath>
 
-    // Layer, if non-nil, means this node can contain other nodes -- it is also dubbed a "node space"
-    // For nodes that have this Layer as the parent, their coordinates are relative to the coordinate space of this Node.
-    // Nested NodeLayers allow Node placements to occur with pluggable transformations.
-                NodeLayer           Layer                       = 2;
+    Put                     = 8;    // Store each entry at ChReq.Entries[].Keypath respectively
 
-    // Tags is a collection of UTF8 identifying strings delimited by a comma (',').
-    // This offers a flexible and lightweight system to filter hits during NodeScan()
-                string              Tags                        = 4;
-    
-    // LastModified is a timestamp of when this node was last altered (in UTC seconds).
-    // By default, this field is auto-updated during NodePut().
-                int64               LastModified                = 7;
+    // CancelChReq tells the server to cancel the ChReq referenced by ChReq.ReqID.
+    CancelChReq             = 16;
 
-    // Optional values that can express commonly needed fields or allow this Node to be self-describing.
+    // Modifies session access to this open channel, allowing a caller to do things like:
+    //   - establish access as a specific identity
+    //   - supply a crypto info, ultimately allowing decryption to occur for subsequent access.
+    AccessGrant             = 30;
+
+    // ServeChannel serves the channel specified by the channel state URI contained in ChReq.Entries[0].Value.
+    // Fully qualified channel URIs take the form of "/domain-name/channelID"
+    // When full service is available, the server will send a ChMsgOp.ChOpened message.
+    ServeChannel            = 41;
+
+    // ChannelGenesis creates a new channel in the domain name specified in ChReq.Entries[0].Value.
+    // ChReq.Entries[1..] are entries that are written into the new channel (and are part of the genesis transaction).
+    // When the channel has been created, the server will send a ChMsgOp.ChOpened message.
+    ChannelGenesis          = 42;
+}
+
+// ChReqOptions are additional flags that can be applied to a ChReq.
+enum ChReqOptions {
+
+    // QueueFIFO refers to how all ChReqs are sequentially queued for execution on the channel being served.
+    // This is the default behavior and is only present to satisfy protobufs wanting a 0 value to start with.
+    QueueFIFO               = 0; 
+
+    // ContinuousSync means that this ChReq should remain "subscribed" to its query and get entry updates for qualifying Keypaths.
+    // When this is set, ChMsgOp.SyncComplete is sent each time all pending ch state changes have been sent. 
+    ContinuousSync          = 16;
+
+    // Returns only Keypath strings (no data retrieval occurs for each returned ChEntry). 
+    ReturnKeypathsOnly      = 32;
+}
+
+
+// ChReq is generalized request sent from client to server via ServeChannel(). 
+// The client sends a stream of ChReqs and monitors the ChMsgs that a server sends back to monitor status and completion.
+message ChReq {
+
+    // ReqID is an optional client-assigned ID typically used by the client to determine the originating request that generated a particular ChMsg.
+                int32               ReqID                       = 2;
+
+    // ChOp requests that the given op to be execute on ChReq.Entries
+                ChReqOp             ReqOp                       = 5;
+
+    // Entries are the operands of ChReq.ChOp.
+    repeated    ChEntry             Entries                     = 6;
+
+    // ChReqOpts offers options and flexibility how this ChReq executes.
+                ChReqOptions        Options                     = 8;
+                
+    // RegexTypeID is an optional regex filter that looks for matches on ChEntry.TypeID.
+                string              RegexTypeID                 = 13;           
+}
+
+
+// ChMsgOp is a collection of ChMsgOp values that have a special meaning in a ChMsg. 
+enum ChMsgOp {
+
+    // Recv means than ChMsg.Entry is being sent in response to ChMsg.ReqID.
+    Recv                = 0;
+
+    // ChReqDiscarded means the referenced ChReq failed and/or has been cancelled.
+    // ChMsg.Entry.Attachment is a serialized ChReqErr. 
+    ChReqDiscarded      = 1;
+
+    // ChReqComplete means the referenced ChReq (via ChMsg.ReqID) has successfully completed.
+    // If a transaction was generated from this op, ChMsg.Entry.Attachment is set to the TxID.
+    ChReqComplete       = 2;
+
+    // SystemMsg means that ChMsg.Entry is an out-of-band system message to be interpreted by the client runtime.
+    SystemMsg           = 3;
+
+    // ChOpened is one of the first messages returned following when a client calls ServeChannel().
+    // ChMsg.Entry.Value is set to the channel state URI that is now open.
+    ChOpened            = 10;
+
+    // SyncComplete means all pending applicable state changes have been sent.
+    // This msg is only sent if a ChReq specified ContinuousSync mode. 
+    SyncComplete        = 11;
+}
+
+
+// ChMsg is the generalized response object a server sends to the client as it processes each ChReq sent by the client. 
+message ChMsg {
+
+    // MsgOp tells the client with this channel open that kind of ChMsg this is.
+                ChMsgOp             MsgOp                       = 1;
+                
+    // ReqID is set to value the originating ChReq.ReqID was set to.
+                int32               ReqID                       = 3;
+
+    // This is a payload sent from the server to the client.
+                ChEntry             Entry                       = 4;
+}
+
+
+// ChEntry is stored at a given Keypath a channel Repo.  
+// It is a lightweight and self-describing unit of information intended for general purpose.
+message ChEntry {
+
+    // Keypath is a POSIX-style pathname of this ChEntry (for safety, "/" specifies the root path, not "").
+                string              Keypath                     = 1;
+
+    // LastModified is a timestamp of when this entry was last altered (in UTC seconds).
+    // This timestamp is auto-updated when it is written.
+                int64               LastModified                = 2;
+
+    // Optional values that can express commonly needed fields or allow this entry to be self-describing.
                 string              TypeID                      = 10;
-                string              Glyph                       = 11;
-                string              Name                        = 12;
-                string              Value                       = 13;
+                string              Label                       = 11; 
+                string              Value                       = 12; 
 
-    // X1,.. are coordinates expressed in the parent's coordinate space.
+    // X1, X2, and X3 are coordinates or values expressed in any unit.
+    // A channel client can later declare how to interpret these coordinates so that a channel server and provide indexed services.
     // Shoutout to the 3 domains that reflect all theoretical completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s).
     // Special thanks to Michael at Vsauce: https://www.youtube.com/watch?v=SrU9YDoXE88
                 double              X1                          = 21;
                 double              X2                          = 22;
                 double              X3                          = 23;
 
-    // Transform means this Node and its sub nodes should be scaled by [0] (or [0,1,2]) and rotated according to thw quaternion stored in [1,2,3,4] (or [3,4,5,6])
-    // If omitted, implied scale is 1 and there no rotation is applied.
-    repeated    float               Transform                   = 25;
-
-    // T is a time offset expressed in seconds.
-    // A Node's parent layer defines how T=0 maps onto UTC, offering greater of precision (where precision would otherwise be "burned up" by expressing large time value).
-                double              T                           = 28;
-
-    // TSpan is a time duration or period expressed in seconds.
-                double              TSpan                       = 29;
-
-    // Links are URIs to other linked nodes.
-    // [<ChURI>[<ParentLayerID>/]]<NodeID>
-    repeated    string              Links                       = 40;
-
-    // Nodes are corresponding elements of .Links (above) resolved/expanded.
-    // This is only used for a server to return this.Links in their resolved form.
-    // See use of LinksFetchFlags in NodeScanReq.
-    repeated    Node                LinksResolved               = 41;
+    // Attachment is useful to attach any buffer than can be decoded based on ChEntry.KeyPath and/or ChEntry.TypeID.
+    // It should generally should be limited to around 1MB (hard limit is 4MB).
+                bytes               Attachment                  = 40;
+}
 
 
+// ErrCode is used to unambiguously express common errors.
+enum ErrCode {
+    NoErr                       = 0;
 
-    //
-    // Opaque payload/content attachments
-    //
+    UnnamedErr                  = 5000;
+    ChReqCancelled              = 5001;
 
-    // Block is any client data payload (and is generally not accessed by redwood).
-    // When non-nil, it is assumed to be the output of this.BlockRaw.Unmarshal()
-                Block               Block                       = 50;
+    ViolatesAppendOnly          = 5100;
+    InsufficientPermissions     = 5101;
 
-    // BlockRaw is the protobufs serialization of this.Block.
-    // When non-nil, it is assumed to be the output of this.Block.Marshal()
-                bytes               BlockRaw                    = 51;
-
-
-
-    //
-    // Meta-fields -- these fields are not stored and are used by the client and server to communicate Node information.
-    //
-
-    // ParentID is the ID of the Node layer that this Node entry appears in (and whose fields are transformed through that layer).
-    // If this field is empty or nil, the identity/default layer ID and is assumed (and is denoted as '!')
-    // This field is NOT stored directly (as it is exists implicitly):
-    //      - when set by a server (by request via FetchFlags), it is recovered from internal server db info.
-    //      - when set by a client, the client is specifying which parent this node resides in.
-                string              ParentID                    = 60;
-
-    // ChURI is the channel state URI for this node.
-    // This is only used during RPC.ChannelGenesis() and RPC.PutNode() to express a destination ChURI.
-                string              ChURI                       = 61;
-
-} 
+    ChReqNotFound               = 5010;
+    ChReqIDInUse                = 5011;
+    InvalidChURI                = 5020;
+    ChURINotFound               = 5021;
+}
 
 
-
-// NodeLayer is a container for Nodes and can be regarded as a "column" object (where Nodes in this layer can be considered rows).
-// A node with this NodeLayer's Node.ID as its parent means its coordinates are defined according to the parent layer.
-message NodeLayer {
-
-    // T0AsUTC expresses the UTC time index (in seconds) of a Node at T = 0.
-    // This means a NodeLayer can be anchored to any point on the UTC timeline with double precision accuracy.  
-    // This allows a time series of nodes to reside at any conceivable time scale: the planck scale or the timescale of the universe, 14 billion years.
-                double              T0AsUTC                     = 5;
-
-    // SpaceType specifies the implicit geometry baked into coordinates of nodes in this layer.
-    // It designates a particular of 1D, 2D, 3D topography or coordinate system.
-    // e.g. "cartesian/xyz", "cylindrical/angle-r-z", "spherical/r-theta-phi", "geospace-earth/lat-long-alt"
-                string              SpaceType                   = 10;
-
-    // X1UnitType is a unit MIME type descriptor
-    // e.g. "angle/degrees", "distance/meters", "mass/kilograms", "temperature/celsius", "charge/amp-hours", "energy/kw-hours", "wisdom/years"
-                string              X1UnitType                  = 31;
-                string              X2UnitType                  = 32;
-                string              X3UnitType                  = 33;
-
-    // Curvature describes the unit curvature -- WIP
-    //  N means curved aka periodic (curved, with radius 1/N)
-    //  0 means linear (euclidean)
-    // -N means hyperbolic (with horizon -1/N)
-                // string              X1Curvature                 = 31;
-                // string              X2Curvature                 = 32;
-                // string              X3Curvature                 = 33;
-
-
+// ChReqErr wraps any error and is typically used in conjunction with ChMsgOp.ChReqDiscarded
+message ChReqErr {
+                ErrCode             Code                        = 1;
+                string              Msg                         = 2;
 }
 
 
 
-// High-level RPC for PLAN.
-service RPC {
-    rpc         ChannelGenesis(ChannelGenesisReq)               returns (TxInfo);
-    rpc         ChangeUserPerms(ChangeUserPermsReq)             returns (TxInfo);
-
-    // NodeGet returns the node with the given ChURI, parent node ID, and node ID.
-    // Assuming the given ChURI is valid for reading, an empty Node (Node.ID == nil) is returned if the parent or node ID does not exist. 
-    rpc         NodeGet(NodeGetReq)                             returns (Node);
-
-    rpc         NodeScan(NodeScanReq)                           returns (stream Node);
-    rpc         NodePut(NodePutReq)                             returns (TxInfo);
-}
 
 
-message ChannelGenesisReq {
-                Node                ChRoot                      = 1;
-}
+// message SpaceNode {
 
-message TxInfo {
-                string              StateURI                    = 1;
-                bytes               TxID                        = 2;
-}
-
-message ChangeUserPermsReq {
-                string              ChURI                       = 1;
-                string              Address                     = 2;
-                string              WriteKeypathsRegex          = 3;
-                bool                CanWrite                    = 4;
-}
-
-// NodeGetReq contains the parameters for a single Node to be fetched.
-message NodeGetReq {
-                string              ChURI                       = 1;
-                string              ParentID                    = 2;
-                string              NodeID                      = 3;
-
-    // NodeFetchFlags specifies which fields are loaded and returned for each Node scan match/hit returned by NodeScan().          
-                FetchFlags          NodeFetchFlags              = 40;
-
-    // LinksFetchFlags specifies which fields are loaded and returned for linked nodes of each Node hit returned by a NodeScan(). 
-                FetchFlags          LinksFetchFlags             = 41;
-}
-
-// FetchFlags specifies what parts of a Node are loaded and returned during a NodeScan.
-// Note these are bit-ORed together (and is not a normal enum)
-enum FetchFlags {
-    NONE                = 0;
-    FIELDS              = 1;
-    LINKS               = 2;
-    LINKS_RESOLVED      = 4;
-    BLOCK               = 8;
-    BLOCK_DECODED       = 16;
-}
-
-// FilterFlags specifies various options for NodeScan.
-enum FilterFlags {
-    NO_SEARCH           = 0;
-    LAYERS_ONLY         = 1;
-    EXCLUDE_LAYERS      = 2;
-}
-
-
-message NodeScanReq {
-                string              ChURI                       = 1;
-
-    // Note that "!" is used to denote ChURI's default (root) node ID.
-    // FUTURE: should this instead just be any valid parent node ID pathname?
-                string              RegexParentID               = 3;
-
-    // Filters to apply to each node candidate
-                string              RegexNodeID                 = 10;
-                string              RegexName                   = 11;
-                string              RegexTags                   = 12;
-                string              RegexTypeID                 = 13;
-
-    // FilterFlags further selects which Nodes are eligible to be scan hits. 
-                FilterFlags         FilterFlags                 = 14;
-
-    // Subscribe specifies if this scan should remain open and await additional hits that may appear as state is updated. 
-                bool                Subscribe                   = 20;
-
-    // Min/max time search params (no search if TMax > TMin)
-                double              TMin                        = 30;
-                double              TMax                        = 31;
-
-    // See NodeGetReq
-                FetchFlags          NodeFetchFlags              = 40;
-                FetchFlags          LinksFetchFlags             = 41;
-}
+//     // Transform means this Node and its sub nodes should be scaled by [0] (or [0,1,2]) and rotated according to thw quaternion stored in [1,2,3,4] (or [3,4,5,6])
+//     // If omitted, implied scale is 1 and there no rotation is applied.
+//     // For nodes that have this Node as the parent, their coordinates are relative to the coordinate space of this Node.
+//     // Nested Transforms allow Node placements to be of arbitrary precision 
+//     repeated    float               Transform                   = 4;
+// }
 
 
 
-message NodePutReq {
-
-    // Nodes is a list of Nodes to be put (in order).
-    // NodePut() will first merge these Nodes in the order they appear (or will no-op if this list is nil or empty).
-    // All values of Node.ChURI must be equal or an error is returned (excluding empty/omitted URIs which denotes deferring to another Node.ChURI)
-    repeated    Node                Nodes                       = 5;
-
-    // Node is a node to be put.
-    // NodePut() will merge this Node (or will no-op if this Node is nil).
-    // This field is offered as convenience and is equivalent to putting this node at the end of .Nodes[]
-                Node                Node                        = 6;
-
-}
-
+// Reserved Keypath symbols used within ChEntry.Keypath during ChReqOp.Put
+// $SELF_UUID       -- inserts an ID that reflects a unique ID associated with the current 
+// $ITEM_UUID       -- inserts a newly generated inque value 
