@@ -21,7 +21,6 @@ service RPC {
 // The implicit context is if it's a message a server sends to a client or vice versa.
 enum FeedMsgOp {
 
-
     /*
     ** 
     ** 
@@ -34,18 +33,13 @@ enum FeedMsgOp {
     RecvEntry               = 0;
 
     // ReqComplete means the referenced request (via FeedMsg.ReqID) has successfully completed.
+    // Other values in the FeedMsg are contextual the op that was completed.
     ReqComplete             = 1;
 
     // ReqDiscarded means the referenced request failed and/or has been cancelled.
-    // FeedMsg.EntryData is a serialized ReqErr. 
+    // If FeedMsg.MsgData != nil, then is a serialized ReqErr describing why it was discarded.
     ReqDiscarded            = 2;
 
-    // RecvCheckpoint signals that the opaque token contained in FeedMsg.MetaStr can be used to resume the feed stream at this point.
-    // This value is intended to be used by ResumeFeedAt.
-    RecvCheckpoint          = 10;
-
-    // SyncComplete means the feed is up to date and is now awaiting new feed entires from peers.
-    SyncComplete            = 11;
 
 
     /*
@@ -56,24 +50,19 @@ enum FeedMsgOp {
     ** 
     **/
 
-    // OpenFeed opens a given feed URI for subsequent access.
-    // FeedMsg.EntryData is a serialized OpenFeedReq. 
-    // Streaming of that feed does not occur until RestartFeedAt.
+    // OpenFeed opens a given feed URI for access. 
+    // FeedMsg.MsgData is a serialized OpenFeedReq. 
+    // In response ReqComplete message, FeedMsg.MetaStr is a "ResumeCtx" token needed for a future OpenFeed call.
     OpenFeed                = 30;
 
-    // ResumeFeedAt resets the stream head of the feed to the given checkpoint string specified in FeedMsg.MetaStr.
-    // If FeedMsg.EntryID == -1, then the server will only send EntryIDs (EntryData and EntryCodec will be nil) 
-    ResumeFeedAt            = 31;
-
-    // CloseFeed tells the server to cancel the FeedReq referenced by FeedReq.ReqID.
+    // CloseFeed tells the server to cancel the FeedReq associated with FeedReq.ReqID.
     CloseFeed               = 35;
 
-    // AppendEntry tells the server to append EntryCodec+EntryData to the currently open feed referenced by FeedReq.ReqID.
+    // AppendEntry tells the server to append EntryCodec+MsgData to the currently open feed referenced by FeedReq.ReqID.
+    // When this entry has been committed, a ReqComplete will be returned containing the newly assigned EntryID.
     AppendEntry             = 40; 
 
 }
-
-
 
 
 
@@ -90,13 +79,13 @@ message FeedMsg {
     // MetaStr is a multi-purpose field used to communicate meta information that is not part of entry data -- varies per FeedMsgOp.
                 string              MetaStr                     = 3;
 
+    // MsgData is the content buffer that is contextual to each FeedMsgOp.
+                bytes               MsgData                     = 4;
+
     // EntryCodec specifies the type and encoding of FeedMsg.Entry set by the originating client.
     // FeedMsg.Entry and FeedMsg.EntryCodec originate from a client using FeedReqOp.Append.
     // Note: negative values are reserved for feed infrastructure internal use and can be ignored by the client.
                 int32               EntryCodec                  = 10;
-
-    // EntryData is the content buffer.
-                bytes               EntryData                   = 11;
 
     // EntryID identifies a particular entry in this feed during this session.
                 int64               EntryID                     = 12;
@@ -126,12 +115,49 @@ message ReqErr {
                 string              Msg                         = 2;
 }
 
+enum ResumeMode {
+
+    // DontStream means the server should not stream any entries.
+    // This mode is used by clients that only want to append entries to a feed. 
+    DontStream              = 0;
+
+    // FromGenesis tells the server to start streaming from the very beginning of the feed.  
+    // ResumeCtx and ResumeEntryID are ignored.
+    FromGenesis             = 1;
+
+    // AtEntry tells the server to stream starting with ResumeEntryID.
+    AtEntry                 = 4;
+
+    // AfterEntry tells the server to stream starting with the entry immediately *after* ResumeEntryID.
+    AfterEntry              = 5;
+
+    // AfterHead tells the server to resume after the latest entry in this feed.
+    // ResumeCtx and ResumeEntryID are ignored.
+    AfterHead               = 7;
+}
+
 
 message OpenFeedReq {
 
     // FeedURI is the feed name to be opened.  
-    // By convention, a feed URI a case-sensitive, UTF8, POSIX-style pathname with no leading or trailing slashes.
+    // A feed URI a case-sensitive, UTF8, POSIX-style pathname with no leading or trailing slashes.
                 string              FeedURI                     = 1;
+
+    // ResumeMode specifies if and where the server should start streaming feed entries.
+                ResumeMode          ResumeMode                  = 3;
+
+    // ResumeCtx provides context for ResumeFromEntryID
+                string              ResumeCtx                   = 5;
+
+    // ResumeEntryID tells the server where to resume streaming.
+                int64               ResumeEntryID               = 6;
+
+    // MaxEntriesToSend limits the number of entries the server will stream.
+    // If 0, then no limit is set.
+                int32               MaxEntriesToSend            = 7;
+
+    // SendEntryIDsOnly tells the server to only send EntryIDs (MsgData and EntryCodec will be nil) 
+                bool                SendEntryIDsOnly            = 8;
 
     // GenesisEntry signals to create a new feed.
     // If non-nil, FeedURI should be created and this entry should be the first entry appended to it.
