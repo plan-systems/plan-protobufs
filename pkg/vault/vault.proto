@@ -92,25 +92,25 @@ message FeedMsg {
 
 
 
-enum ResumeMode {
+enum StreamMode {
 
     // DontStream means the server should not stream any entries.
     // This mode is used by clients that only want to append entries to a feed. 
-    // VaultCtx and ResumeEntryID are ignored.
+    // VaultCtx and SeekEntryID are ignored.
     DontStream              = 0;
 
     // FromGenesis tells the server to start streaming from the very beginning of the feed.  
-    // VaultCtx and ResumeEntryID are ignored.
+    // VaultCtx and SeekEntryID are ignored.
     FromGenesis             = 1;
 
-    // AtEntry tells the server to stream starting with ResumeEntryID.
+    // AtEntry tells the server to stream starting with SeekEntryID.
     AtEntry                 = 4;
 
-    // AfterEntry tells the server to stream starting with the entry immediately *after* ResumeEntryID.
+    // AfterEntry tells the server to stream starting with the entry immediately *after* SeekEntryID.
     AfterEntry              = 5;
 
     // AfterHead tells the server to resume after the latest entry in this feed.
-    // VaultCtx and ResumeEntryID are ignored.
+    // VaultCtx and SeekEntryID are ignored.
     AfterHead               = 7;
 
 }
@@ -122,14 +122,14 @@ message OpenFeedReq {
     // A feed URI a case-sensitive, UTF8, POSIX-style pathname with no leading or trailing slashes.
                 string              FeedURI                     = 1;
 
-    // ResumeMode specifies if and where the server should start streaming feed entries.
-                ResumeMode          ResumeMode                  = 3;
+    // StreamMode specifies if and where the server should start streaming feed entries.
+                StreamMode          StreamMode                  = 3;
 
-    // VaultCtx provides context for ResumeFromEntryID
+    // VaultCtx provides context for SeekEntryID -- see StreamMode.
                 string              VaultCtx                    = 5;
 
-    // ResumeEntryID tells the server where to resume streaming.
-                int64               ResumeEntryID               = 6;
+    // SeekEntryID tells the server where to start streaming.
+                int64               SeekEntryID                 = 6;
 
     // MaxEntriesToSend limits the number of entries the server will stream.
     // If 0, then no limit is set.
