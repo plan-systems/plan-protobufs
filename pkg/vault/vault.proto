@@ -5,7 +5,7 @@ package vault;
 // High-level append-only feed server RPC.
 service RPC {
 
-    // ServeFeed allows a client to stream entries in a given feed URI.  
+    // ServeFeed allows a client to stream entries from a given feed URI.  
     // This model is that the client submits requests and the server executes them, streaming entry data and completion status updates.
     // The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
     rpc         ServeFeed(stream FeedMsg)                       returns (stream FeedMsg);
@@ -111,7 +111,7 @@ enum ErrCode {
     FeedReqCancelled            = 5001;
 
     InsufficientPermissions     = 5101;
-    
+
     FeedReqNotFound             = 5010;
     FeedReqIDInUse              = 5011;
     InvalidFeedURI              = 5020;
@@ -120,7 +120,7 @@ enum ErrCode {
 }
 
 
-// ReqErr wraps any error and is typically used in conjunction with FeedMsgOp.FeedReqDiscarded
+// ReqErr wraps any error and is typically used in conjunction with FeedMsgOp.ReqDiscarded
 message ReqErr {
                 ErrCode             Code                        = 1;
                 string              Msg                         = 2;
