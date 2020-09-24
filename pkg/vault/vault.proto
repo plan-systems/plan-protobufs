@@ -5,10 +5,10 @@ package vault;
 // VaultGrpc is append-only feed server model.
 service VaultGrpc {
 
-    // Serve offers a client service to a vault's feed repo.
+    // FeedService offers a client service to a vault's feed repo.
     // The client submits requests to be executed, and the server streams feed entries and completion status.
     // The return stream remains open as long as the client stream remains open.
-    rpc         Serve(stream FeedMsg)           returns (stream FeedMsg);
+    rpc         FeedService(stream FeedMsg)           returns (stream FeedMsg);
 
 }
 
