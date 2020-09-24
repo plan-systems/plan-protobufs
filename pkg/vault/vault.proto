@@ -34,7 +34,7 @@ enum FeedMsgOp {
     ReqComplete             = 1;
 
     // ReqDiscarded means the referenced request failed and/or has been cancelled.
-    // If FeedMsg.MsgData != nil, then is a serialized ReqErr describing why it was discarded.
+    // If FeedMsg.MsgData != nil, then it is a serialized ReqErr describing why it was discarded.
     ReqDiscarded            = 2;
 
 
