@@ -2,17 +2,15 @@ syntax = "proto3";
 package vault;
 
 
-// High-level append-only feed server.
+// VaultGrpc is append-only feed server model.
 service VaultGrpc {
 
-    // ServeFeed allows a client to stream entries from a given feed URI.  
-    // This model is that the client submits requests and the server executes them, streaming entry data and completion status updates.
-    // The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
-    rpc         ServeFeed(stream FeedMsg)                       returns (stream FeedMsg);
+    // Serve offers a client service to a vault's feed repo.
+    // The client submits requests to be executed, and the server streams feed entries and completion status.
+    // The return stream remains open as long as the client stream remains open.
+    rpc         Serve(stream FeedMsg)           returns (stream FeedMsg);
 
 }
-
-
 
 
 
@@ -28,7 +26,7 @@ enum FeedMsgOp {
     ** 
     **/
 
-    // RecvEntry delivers the next entry in the feed.
+    // RecvEntry delivers the next entry in the feed stream identified by FeedMsg.FeedID.
     RecvEntry               = 0;
 
     // ReqComplete means the referenced request (via FeedMsg.ReqID) has successfully completed.
@@ -50,15 +48,17 @@ enum FeedMsgOp {
 
     // OpenFeed opens a given feed URI for access. 
     // FeedMsg.MsgData is a serialized OpenFeedReq. 
-    // In response ReqComplete message, FeedMsg.MetaStr is a "VaultCtx" token needed for a future OpenFeed call.
+    // In the response ReqComplete msg, the server returns:
+    //     a) FeedMsg.MetaStr to a "VaultCtx" token needed for a future OpenFeed call (see StreamMode).
+    //     b) FeedMsg.FeedID to a unique ID and is used to identify all subsequent feed-specific messages.
     OpenFeed                = 30;
 
-    // CloseFeed tells the server to cancel/stop/close the OpenFeedReq associated with FeedReq.ReqID.
+    // CloseFeed tells the server to cancel/stop/close the OpenFeedReq identified by FeedMsg.FeedID.
     CloseFeed               = 35;
 
-    // AppendEntry tells the server to append EntryCodec+MsgData to the currently open feed referenced by FeedReq.ReqID.
+    // AppendEntry tells the server to append MsgCodec & MsgData to the feed identified by FeedMsg.FeedID.
     // When this entry has been committed, a ReqComplete will be returned containing the newly assigned EntryID.
-    AppendEntry             = 40; 
+    AppendEntry             = 20; 
 
 }
 
@@ -71,17 +71,20 @@ message FeedMsg {
                 
     // ReqID is set to value the originating FeedReq.ReqID was set to.
                 uint32              ReqID                       = 2;
+
+    // FeedID identifies the FeedURI opened via the completion of FeedMsgOp.OpenFeed.
+                uint32              FeedID                      = 3;
     
-    // MetaStr is a multi-purpose field used to communicate meta information that is not part of entry data -- varies per FeedMsgOp.
-                string              MetaStr                     = 3;
+    // MetaStr is a multi-purpose field used to communicate meta information -- varies per FeedMsgOp.
+                string              MetaStr                     = 4;
 
-    // MsgData is the content buffer that is contextual to each FeedMsgOp.
-                bytes               MsgData                     = 4;
+    // MsgData is a multi-purpose content buffer that is contextual to each FeedMsgOp.
+                bytes               MsgData                     = 5;
 
-    // EntryCodec specifies the type and encoding of FeedMsg.Entry set by the originating client.
-    // FeedMsg.Entry and FeedMsg.EntryCodec originate from a client using FeedReqOp.Append.
+    // MsgCodec specifies the type and encoding of FeedMsg.MsgData.
+    // FeedMsg.MsgData & MsgCodec originate from a client via FeedReqOp.AppendEntry.
     // Note: negative values are reserved for feed infrastructure internal use and can be ignored by the client.
-                int32               EntryCodec                  = 10;
+                int32               MsgCodec                    = 10;
 
     // EntryID identifies a particular entry in this feed during this session.
                 int64               EntryID                     = 12;
@@ -91,7 +94,7 @@ message FeedMsg {
 enum StreamMode {
 
     // DontStream means the server should not stream any entries.
-    // This mode is used by clients that only want to append entries to a feed. 
+    // This mode is typically used by clients that only want to append entries to a feed.
     // VaultCtx and SeekEntryID are ignored.
     DontStream              = 0;
 
@@ -130,7 +133,7 @@ message OpenFeedReq {
     // If 0, then no limit is set.
                 int32               MaxEntriesToSend            = 7;
 
-    // SendEntryIDsOnly tells the server to only send EntryIDs (MsgData and EntryCodec will be nil) 
+    // SendEntryIDsOnly tells the server to only send EntryIDs (MsgData and MsgCodec will be nil) 
                 bool                SendEntryIDsOnly            = 8;
 
     // GenesisEntry signals to create a new feed.
