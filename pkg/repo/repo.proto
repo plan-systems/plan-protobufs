@@ -5,9 +5,9 @@ package repo;
 // High-level channel repository RPC.
 service RepoGrpc {
 
-    // ServeChannel opens the specified channel at a given state and executes a stream of requests from the client.
+    // RepoService opens the specified channel at a given state and executes a stream of requests from the client.
     // The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
-    rpc         ServeChannel(stream ChReq)                      returns (stream ChMsg);
+    rpc         RepoService(stream ChReq)               returns (stream ChMsg);
 
 }
 
@@ -20,7 +20,7 @@ enum ChReqOp {
     GetShallow              = 2;    // Shallow iterate through <Keypath>
     GetDeep                 = 3;    // Deep iterate through <Keypath>
 
-    Put                     = 8;    // Store each entry at ChReq.Entries[].Keypath respectively
+    PutEntry                = 8;    // Store each entry at ChReq.Entries[].Keypath respectively
 
     // CancelChReq tells the server to cancel the ChReq referenced by ChReq.ReqID.
     CancelChReq             = 16;
@@ -31,7 +31,7 @@ enum ChReqOp {
     AccessGrant             = 30;
 
     // ServeChannel serves the channel specified by the channel state URI contained in ChReq.Entries[0].Value.
-    // Fully qualified channel URIs take the form of "/domain-name/channelID"
+    // Fully qualified channel URIs take the form of "domain-name/channelID"
     // When full service is available, the server will send a ChMsgOp.ChOpened message.
     ServeChannel            = 41;
 
@@ -81,8 +81,8 @@ message ChReq {
 // ChMsgOp is a collection of ChMsgOp values that have a special meaning in a ChMsg. 
 enum ChMsgOp {
 
-    // Recv means than ChMsg.Entry is being sent in response to ChMsg.ReqID.
-    Recv                = 0;
+    // RecvEntry means than ChMsg.Entry is being sent in response to ChMsg.ReqID.
+    RecvEntry           = 0;
 
     // ChReqDiscarded means the referenced ChReq failed and/or has been cancelled.
     // If ChMsg.Entry.EntryData != nil, then is a serialized ChReqErr describing why it was discarded.
