@@ -13,6 +13,13 @@ service VaultGrpc {
 }
 
 
+enum Const {
+    ConstDefs                   = 0;
+
+    // DefaultGrpcServicePort is the TCP port number that the service VaultGrpc should run on by default.
+    DefaultGrpcServicePort      = 5190;
+}
+
 
 // FeedMsgOp tells a holder of a FeedMsg how to interpret its fields.
 // The implicit context is if it's a message a server sends to a client or vice versa.
@@ -66,7 +73,7 @@ enum FeedMsgOp {
 
     // AppendEntry requests to append MsgCodec & MsgData to the opened feed identified by FeedMsg.FeedID (the ReqID of the OpenFeed op).
     // When this entry has been committed, a ReqComplete will be returned containing the newly assigned EntryID.
-    AppendEntry             = 35; 
+    AppendEntry             = 35;
 
 }
 
@@ -97,6 +104,7 @@ message FeedMsg {
 
     // EntryID identifies a particular entry in this feed during this session.
                 int64               EntryID                     = 12;
+
 }
 
 
@@ -120,6 +128,7 @@ enum StreamMode {
     // AfterHead tells the server to resume after the latest entry in this feed.
     // VaultCtx and SeekEntryID are ignored.
     AfterHead               = 7;
+
 }
 
 
@@ -148,6 +157,7 @@ message OpenFeedReq {
     // GenesisEntry signals to create a new feed.
     // If non-nil, FeedURI should be created and this entry should be the first entry appended to it.
                 FeedMsg             GenesisEntry                = 10;
+
 }
 
 
