@@ -7,7 +7,7 @@ service RepoGrpc {
 
     // RepoService opens the specified channel at a given state and executes a stream of requests from the client.
     // The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
-    rpc         RepoService(stream ChReq)               returns (stream ChMsg);
+    rpc         RepoServicePipe(stream ChReq)               returns (stream ChMsg);
 
 }
 
@@ -16,44 +16,36 @@ service RepoGrpc {
 enum ChReqOp {
     NoOp                    = 0;
 
-    Get                     = 1;    // Get the entry at <Keypath>
-    GetShallow              = 2;    // Shallow iterate through <Keypath>
-    GetDeep                 = 3;    // Deep iterate through <Keypath>
+    // CancelReq tells the server to close/cancel the ChReq referenced by ChReq.ReqID.
+    CancelReq               = 1;
 
-    PutEntry                = 8;    // Store each entry at ChReq.Entries[].Keypath respectively
-
-    // CancelChReq tells the server to cancel the ChReq referenced by ChReq.ReqID.
-    CancelChReq             = 16;
-
-    // Modifies session access to this open channel, allowing a caller to do things like:
+    // Modifies session access, allowing a caller to do things like:
     //   - establish access as a specific identity
     //   - supply a crypto info, ultimately allowing decryption to occur for subsequent access.
-    AccessGrant             = 30;
+    AccessGrant             = 2;
 
-    // ServeChannel serves the channel specified by the channel state URI contained in ChReq.Entries[0].Value.
-    // Fully qualified channel URIs take the form of "domain-name/channelID"
-    // When full service is available, the server will send a ChMsgOp.ChOpened message.
-    ServeChannel            = 41;
+    // ChannelGenesis creates a new channel in the domain name specified in ChReq.URI.
+    // ChReq.Entries[] are entries that are written into the new channel (and are part of the genesis tx).
+    // When the channel has been created, the server will send a ChMsgOp.ChannelOpened message.
+    ChannelGenesis          = 3;
 
-    // ChannelGenesis creates a new channel in the domain name specified in ChReq.Entries[0].Value.
-    // ChReq.Entries[1..] are entries that are written into the new channel (and are part of the genesis transaction).
-    // When the channel has been created, the server will send a ChMsgOp.ChOpened message.
-    ChannelGenesis          = 42;
-}
+    // Put atomically commits ChReq.Entries[] to the given ChURI.
+    Put                     = 8;
+        
+    // Gets the entry (or entries) from the given ChURI.
+    Get                     = 0x0080;
+    GetShallow              = 0x0180;
+    GetDeep                 = 0x0280;
 
-// ChReqOptions are additional flags that can be applied to a ChReq.
-enum ChReqOptions {
+    // GetAndSync is the usual Get on the requested keypath(s) but keeps the ChReq open to receive ch entry updates for qualifying keypaths.
+    // The server sends the msg ChMsgOp.SyncStep following each atomic batch of updates.
+    // This value can be bit ORed with any other Get* request op.
+    GetAndSync              = 0x0480;
 
-    // QueueFIFO refers to how all ChReqs are sequentially queued for execution on the channel being served.
-    // This is the default behavior and is only present to satisfy protobufs wanting a 0 value to start with.
-    QueueFIFO               = 0; 
+    // GetKeypathsOnly causes only ChMsg.Keypath strings to be returned (no data retrieval occurs). 
+    // This value can be bit ORed with any other Get* request op.
+    GetKeypathsOnly         = 0x0880;
 
-    // ContinuousSync means that this ChReq should remain "subscribed" to its query and get entry updates for qualifying Keypaths.
-    // When this is set, ChMsgOp.SyncComplete is sent each time all pending ch state changes have been sent. 
-    ContinuousSync          = 16;
-
-    // Returns only Keypath strings (no data retrieval occurs for each returned ChEntry). 
-    ReturnKeypathsOnly      = 32;
 }
 
 
@@ -61,115 +53,145 @@ enum ChReqOptions {
 // The client sends a stream of ChReqs and monitors the ChMsgs that a server sends back to monitor status and completion.
 message ChReq {
 
-    // ReqID is an optional client-assigned ID typically used by the client to determine the originating request that generated a particular ChMsg.
+        // ReqOp requests that the given op to be execute on ChReq.Entries
+                ChReqOp             ReqOp                       = 1;
+
+    // ReqID is a client-assigned ID that allows the client and server to reference this ChReq in the future.
+    // ChMsg.ReqClosed is how the server signals that a given ChReq is considered closed/complete.
                 int32               ReqID                       = 2;
 
-    // ReqOp requests that the given op to be execute on ChReq.Entries
-                ChReqOp             ReqOp                       = 5;
+    // URI identifies the channel URI that this ChReq is requesting to access.
+    // Channel URIs take the form of "DomainName/ChannelID".
+                string              URI                         = 3;
+                
+    // ForkReqID specifies an open ChReqID to to use for state & credentials. 
+                int32               ForkReqID                   = 4;
 
     // Entries are the operands of ChReq.ChOp.
-    repeated    ChEntry             Entries                     = 6;
-
-    // ChReqOpts offers options and flexibility how this ChReq executes.
-                ChReqOptions        Options                     = 8;
-                
-    // RegexTypeID is an optional regex filter that looks for matches on ChEntry.TypeID.
-                string              RegexTypeID                 = 13;           
+    repeated    ChMsg               Entries                     = 6;
+                          
 }
 
 
 // ChMsgOp is a collection of ChMsgOp values that have a special meaning in a ChMsg. 
 enum ChMsgOp {
+    
+    // ChEntry means this is a content msg being sent in response to ChMsg.ReqID.
+    ChEntry                 = 0;
 
-    // RecvEntry means than ChMsg.Entry is being sent in response to ChMsg.ReqID.
-    RecvEntry           = 0;
+    // ChReqErr is the server reporting an error for a the reference ReqID.
+    // ChMsg.Attachment is a serialized ReqErr.
+    ChReqErr                = 2;
 
-    // ChReqDiscarded means the referenced ChReq failed and/or has been cancelled.
-    // If ChMsg.Entry.EntryData != nil, then is a serialized ChReqErr describing why it was discarded.
-    ChReqDiscarded      = 1;
+    // OnTx is sent in response to an ChReq that inserts a change to a channel.
+    // Receipt of this msg means a tx was generated and ChMsg.MsgData is the TxID.
+    OnTx                    = 3;
 
-    // ChReqComplete means the referenced ChReq (via ChMsg.ReqID) has successfully completed.
-    // If a transaction was generated from this op, ChMsg.Entry.Attachment is set to the TxID.
-    ChReqComplete       = 2;
+    // ChannelOpened is sent by the server in response to ChReqOp.ChannelGenesis success.
+    // ChMsg.ValueStr is set to the newly created channel URI.
+    ChannelCreated          = 10;
 
-    // SystemMsg means that ChMsg.Entry is an out-of-band system message to be interpreted by the client runtime.
-    SystemMsg           = 3;
-
-    // ChOpened is one of the first messages returned following when a client calls ServeChannel().
-    // ChMsg.Entry.Value is set to the channel state URI that is now open.
-    ChOpened            = 10;
-
-    // SyncComplete means all pending applicable state changes have been sent.
-    // This msg is only sent if a ChReq specified ContinuousSync mode. 
-    SyncComplete        = 11;
+    // SyncStep means all pending applicable state changes have been sent for the given ChMsg.ReqID.
+    // This msg is only sent if a ChReq specified requested GetAndSync mode. 
+    SyncStep                = 11;
 }
+
+
+// message ChInfo {
+//                 string              ChURI                       = 1;
+
+//                 bytes               GenesisTxID                 = 3;
+// }
+
 
 
 // ChMsg is the generalized response object a server sends to the client as it processes each ChReq sent by the client. 
 message ChMsg {
 
+    /*
+    ** 
+    **
+    ** META FIELDS 
+    ** These fields are NOT channel entry content fields.  They are used for Repo service request/response flow.
+    ** They are zeroed before this ChMsg is stored as a channel entry.
+    **
+    ** 
+    **/
+
     // MsgOp tells the client with this channel open that kind of ChMsg this is.
                 ChMsgOp             MsgOp                       = 1;
                 
-    // ReqID is set to value the originating ChReq.ReqID was set to.
-                int32               ReqID                       = 3;
+    // ReqID references the originating ChReq that this ChMsg is in response to.
+                int32               ReqID                       = 2;
+    
+    // ReqClosed is set if this the referenced ChReq (via ChMsg.ReqID) is considered complete and is now closed.
+                bool                ReqClosed                   = 3;
+                    
+    // Keypath is a POSIX-style pathname of this channel entry (for safety, "/" specifies the root path, not "").
+                string              Keypath                     = 5;
 
-    // This is a payload sent from the server to the client.
-                ChEntry             Entry                       = 4;
-}
 
-
-// ChEntry is stored at a given Keypath a channel Repo.  
-// It is a lightweight and self-describing unit of information intended for general purpose.
-message ChEntry {
-
-    // Keypath is a POSIX-style pathname of this ChEntry (for safety, "/" specifies the root path, not "").
-                string              Keypath                     = 1;
+    /*
+    ** 
+    ** 
+    ** CONTENT FIELDS
+    ** These fields are considered the channel entry data.
+    ** 
+    ** 
+    **/
 
     // LastModified is a timestamp of when this entry was last altered (in UTC seconds).
-    // This timestamp is auto-updated when it is written.
-                int64               LastModified                = 2;
+    // This timestamp is updated when it is written to a channel.
+                int64               LastModified                = 10;
 
     // Optional values that can express commonly needed fields or allow this entry to be self-describing.
-                string              TypeID                      = 10;
-                string              Label                       = 11; 
-                string              Value                       = 12; 
+                string              TypeID                      = 20;
+                string              Label                       = 21; 
+                string              ValueStr                    = 22; 
+                int64               ValueInt                    = 23;
 
     // X1, X2, and X3 are coordinates or values expressed in any unit.
     // A channel client can later declare how to interpret these coordinates so that a channel server and provide indexed services.
     // Shoutout to the 3 domains that reflect all theoretical completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s).
     // Special thanks to Michael at Vsauce: https://www.youtube.com/watch?v=SrU9YDoXE88
-                double              X1                          = 21;
-                double              X2                          = 22;
-                double              X3                          = 23;
+                double              X1                          = 31;
+                double              X2                          = 32;
+                double              X3                          = 33;
 
-    // Attachment is useful to attach any buffer than can be decoded based on ChEntry.KeyPath and/or ChEntry.TypeID.
-    // It should generally should be limited to around 1MB (hard limit is 4MB).
+    // Attachment is useful to attach any buffer, typically decoded based on ChMsg.MsgOp, ChMsg.Keypath, or ChMsg.TypeID.
+    // It should generally should be limited to around 2MB (hard limit is 4MB).
                 bytes               Attachment                  = 40;
 }
 
 
-// ErrCode is used to unambiguously express common errors.
-enum ErrCode {
+// ReqErrCode is used to unambiguously express common errors.
+enum ReqErrCode {
     NoErr                       = 0;
-
+    
     UnnamedErr                  = 5000;
-    ChReqCancelled              = 5001;
+    ReqCancelled                = 5001;
+    RepoShuttingDown            = 5002;
+
+    ChReqIDNotFound             = 5010;
+    ChReqIDAlreadyInUse         = 5011;
+    InvalidChURI                = 5020;
+    ChURINotFound               = 5021;
 
     ViolatesAppendOnly          = 5100;
     InsufficientPermissions     = 5101;
 
-    ChReqNotFound               = 5010;
-    ChReqIDInUse                = 5011;
-    InvalidChURI                = 5020;
-    ChURINotFound               = 5021;
+    ChProtocolNotRecognized     = 5201;
 }
 
 
-// ChReqErr wraps any error and is typically used in conjunction with ChMsgOp.ChReqDiscarded
-message ChReqErr {
-                ErrCode             Code                        = 1;
+// ReqErr wraps errors and is typically used in conjunction with ChMsgOp.ChReqErr
+message ReqErr {
+
+                ReqErrCode          Code                        = 1;
+
+    // Msg is a human-readable info string that offers amplifying info about the given error.
                 string              Msg                         = 2;
+
 }
 
 
