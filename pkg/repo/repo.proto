@@ -12,6 +12,21 @@ service RepoGrpc {
 }
 
 
+enum Const {
+    ConstDefs                   = 0;
+
+	// ChIDSz specifies the byte size of a channel ID (and is the right-most bytes of a TxID).
+	ChIDSz                      = 18;
+
+	// TxIDSz specifies the byte size of a transaction ID.
+	TxIDSz                      = 32;
+
+    // DefaultGrpcServicePort is the TCP port the service RepoGrpc should run on by default.
+    DefaultGrpcServicePort      = 5191;
+
+}
+
+
 // ChReqOp is a code describing the purpose and format of the ChReq that it resides in.
 enum ChReqOp {
     NoOp                    = 0;
@@ -33,18 +48,18 @@ enum ChReqOp {
     Put                     = 8;
         
     // Gets the entry (or entries) from the given ChURI.
-    Get                     = 0x0080;
-    GetShallow              = 0x0180;
-    GetDeep                 = 0x0280;
-
-    // GetAndSync is the usual Get on the requested keypath(s) but keeps the ChReq open to receive ch entry updates for qualifying keypaths.
-    // The server sends the msg ChMsgOp.SyncStep following each atomic batch of updates.
-    // This value can be bit ORed with any other Get* request op.
-    GetAndSync              = 0x0480;
+    Get                     = 0x0020;
+    GetShallow              = 0x0060;
+    GetDeep                 = 0x00D0;
 
     // GetKeypathsOnly causes only ChMsg.Keypath strings to be returned (no data retrieval occurs). 
-    // This value can be bit ORed with any other Get* request op.
-    GetKeypathsOnly         = 0x0880;
+    // This value is bit-ORed with one of the Get request ops.
+    GetKeypathsOnly         = 0x0400;
+
+    // MaintainSync causes the ChReq to remain open and receive entry updates for qualifying keypaths.
+    // The server sends the msg ChMsgOp.SyncStep following each atomic batch of updates.
+    // This value is bit-ORed with one of the Get request ops.
+    MaintainSync            = 0x0800;
 
 }
 
@@ -94,14 +109,8 @@ enum ChMsgOp {
     // SyncStep means all pending applicable state changes have been sent for the given ChMsg.ReqID.
     // This msg is only sent if a ChReq specified requested GetAndSync mode. 
     SyncStep                = 11;
+
 }
-
-
-// message ChInfo {
-//                 string              ChURI                       = 1;
-
-//                 bytes               GenesisTxID                 = 3;
-// }
 
 
 
@@ -118,8 +127,8 @@ message ChMsg {
     ** 
     **/
 
-    // MsgOp tells the client with this channel open that kind of ChMsg this is.
-                ChMsgOp             MsgOp                       = 1;
+    // Op tells the client with this channel open that kind of ChMsg this is.
+                ChMsgOp             Op                          = 1;
                 
     // ReqID references the originating ChReq that this ChMsg is in response to.
                 int32               ReqID                       = 2;
@@ -128,6 +137,8 @@ message ChMsg {
                 bool                ReqClosed                   = 3;
                     
     // Keypath is a POSIX-style pathname of this channel entry (for safety, "/" specifies the root path, not "").
+    // Each path component in a valid Keypath must have a length of at least 2.
+    // Any channel entry written to an invalid keypath will cause InvalidKeypath to be returned. 
                 string              Keypath                     = 5;
 
 
@@ -158,24 +169,29 @@ message ChMsg {
                 double              X2                          = 32;
                 double              X3                          = 33;
 
-    // Attachment is useful to attach any buffer, typically decoded based on ChMsg.MsgOp, ChMsg.Keypath, or ChMsg.TypeID.
+    // Attachment is useful to attach any buffer, typically decoded based on ChMsg.Op, ChMsg.Keypath, or ChMsg.TypeID.
     // It should generally should be limited to around 2MB (hard limit is 4MB).
                 bytes               Attachment                  = 40;
+            
 }
 
 
-// ReqErrCode is used to unambiguously express common errors.
-enum ReqErrCode {
+// ErrCode is used to unambiguously express common errors.
+enum ErrCode {
     NoErr                       = 0;
-    
-    UnnamedErr                  = 5000;
-    ReqCancelled                = 5001;
-    RepoShuttingDown            = 5002;
 
-    ChReqIDNotFound             = 5010;
-    ChReqIDAlreadyInUse         = 5011;
-    InvalidChURI                = 5020;
-    ChURINotFound               = 5021;
+    UnnamedErr                  = 5000;
+    InternalErr                 = 5001;
+    ReqCancelled                = 5002;
+    ShuttingDown                = 5003;
+    
+    ReqIDNotFound               = 5010;
+    ReqIDAlreadyInUse           = 5011;
+    InvalidKeypath              = 5020;
+    InvalidURI                  = 5021;
+    URINotFound                 = 5022;
+
+    NothingToCommit             = 5030;
 
     ViolatesAppendOnly          = 5100;
     InsufficientPermissions     = 5101;
@@ -187,7 +203,7 @@ enum ReqErrCode {
 // ReqErr wraps errors and is typically used in conjunction with ChMsgOp.ChReqErr
 message ReqErr {
 
-                ReqErrCode          Code                        = 1;
+                ErrCode             Code                        = 1;
 
     // Msg is a human-readable info string that offers amplifying info about the given error.
                 string              Msg                         = 2;
