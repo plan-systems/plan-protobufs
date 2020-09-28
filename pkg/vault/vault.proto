@@ -21,12 +21,12 @@ enum FeedMsgOp {
     /*
     ** 
     ** 
-    ** SERVER => CLIENT
+    ** SERVER RESPONSES
     ** 
     ** 
     **/
 
-    // RecvEntry delivers the next entry in the feed stream identified by FeedMsg.FeedID.
+    // RecvEntry delivers the next entry in a feed stream identified by FeedMsg.ReqID.
     RecvEntry               = 0;
 
     // ReqComplete means the referenced request (via FeedMsg.ReqID) has successfully completed.
@@ -35,30 +35,38 @@ enum FeedMsgOp {
 
     // ReqDiscarded means the referenced request failed and/or has been cancelled.
     // If FeedMsg.MsgData != nil, then it is a serialized ReqErr describing why it was discarded.
-    ReqDiscarded            = 2;
+    // As with ReqComplete, the referenced request is now closed/complete, so the given ReqID is now available for (re)use.
+    ReqDiscarded            = 3;
+
+    // RecvVaultCtx contains the latest/updated "VaultCtx" token, stored in FeedMsg.MetaStr.
+    // This token can be used in a future OpenFeed request to resume reading from a feed (see StreamMode).
+    RecvVaultCtx            = 4;
 
 
     /*
     ** 
     ** 
-    ** CLIENT => SERVER
+    ** CLIENT REQUESTS
     ** 
     ** 
     **/
 
-    // OpenFeed opens a given feed URI for access. 
+    // CancelReq tells the server to cancel/stop/close the request identified by the given ReqID.
+    // Unlike all other client-to-server requests, the ReqID of this msg is not newly issued -- it refers to an existing request.
+    // In response, the server sends a ReqDiscarded message containing:
+    //      - ReqCancelled (if the matching ReqID was found and the associated op is now cancelled/closed)
+    //      - ReqNotFound (if no matching ReqID was found)
+    CancelReq               = 20;
+
+    // OpenFeed requests to open a given feed for reading or appending. 
     // FeedMsg.MsgData is a serialized OpenFeedReq. 
-    // In the response ReqComplete msg, the server returns:
-    //     a) FeedMsg.MetaStr to a "VaultCtx" token needed for a future OpenFeed call (see StreamMode).
-    //     b) FeedMsg.FeedID to a unique ID and is used to identify all subsequent feed-specific messages.
+    // This ReqID of this msg used as FeedMsg.FeedID for subsequent requests that need to refer to an open feed (e.g. AppendEntry).
+    // On success, the server does not send a response and either begins streaming (if it was requested) and/or awaits requests for the opened feed. 
     OpenFeed                = 30;
 
-    // CloseFeed tells the server to cancel/stop/close the OpenFeedReq identified by FeedMsg.FeedID.
-    CloseFeed               = 35;
-
-    // AppendEntry tells the server to append MsgCodec & MsgData to the feed identified by FeedMsg.FeedID.
+    // AppendEntry requests to append MsgCodec & MsgData to the opened feed identified by FeedMsg.FeedID (the ReqID of the OpenFeed op).
     // When this entry has been committed, a ReqComplete will be returned containing the newly assigned EntryID.
-    AppendEntry             = 20; 
+    AppendEntry             = 35; 
 
 }
 
@@ -72,7 +80,8 @@ message FeedMsg {
     // ReqID is set to value the originating FeedReq.ReqID was set to.
                 uint32              ReqID                       = 2;
 
-    // FeedID identifies the FeedURI opened via the completion of FeedMsgOp.OpenFeed.
+    // FeedID is used for a client request that needs to specify an open feed (e.g. AppendEntry).
+    // When set, this is the ReqID of the original OpenFeed request that opened the feed.
                 uint32              FeedID                      = 3;
     
     // MetaStr is a multi-purpose field used to communicate meta information -- varies per FeedMsgOp.
@@ -147,7 +156,7 @@ enum ErrCode {
     NoErr                       = 0;
 
     UnnamedErr                  = 5000;
-    FeedReqCancelled            = 5001;
+    ReqCancelled                = 5001;
 
     InsufficientPermissions     = 5101;
 
