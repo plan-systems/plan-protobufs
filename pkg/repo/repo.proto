@@ -41,10 +41,13 @@ enum ChReqOp {
 
     // ChannelGenesis creates a new channel in the domain name specified in ChReq.URI.
     // ChReq.Entries[] are entries that are written into the new channel (and are part of the genesis tx).
-    // When the channel has been created, the server will send a ChMsgOp.ChannelOpened message.
+    // In the corresponding reply ReqComplete message:
+    //      - ChMsg.Attachment is set to the resulting TxID.
+    //      - ChMsg.ValueStr is set to the URI of the newly created channel.
     ChannelGenesis          = 3;
 
     // Put atomically commits ChReq.Entries[] to the given ChURI.
+    // In the corresponding reply ReqComplete message, ChMsg.Attachment is set to the resulting TxID.
     Put                     = 8;
         
     // Gets the entry (or entries) from the given ChURI.
@@ -72,7 +75,7 @@ message ChReq {
                 ChReqOp             ReqOp                       = 1;
 
     // ReqID is a client-assigned ID that allows the client and server to reference this ChReq in the future.
-    // ChMsg.ReqClosed is how the server signals that a given ChReq is considered closed/complete.
+    // ChMsg.ReqComplete & ReqDiscarded is how the server signals when this request is considered closed/complete.
                 int32               ReqID                       = 2;
 
     // URI identifies the channel URI that this ChReq is requesting to access.
@@ -94,17 +97,14 @@ enum ChMsgOp {
     // ChEntry means this is a content msg being sent in response to ChMsg.ReqID.
     ChEntry                 = 0;
 
-    // ChReqErr is the server reporting an error for a the reference ReqID.
-    // ChMsg.Attachment is a serialized ReqErr.
-    ChReqErr                = 2;
+    // ReqComplete means the referenced request (via ChMsg.ReqID) has successfully completed.
+    // Other values in the ChMsg are contextual based on request that was completed.
+    ReqComplete             = 1;
 
-    // OnTx is sent in response to an ChReq that inserts a change to a channel.
-    // Receipt of this msg means a tx was generated and ChMsg.MsgData is the TxID.
-    OnTx                    = 3;
-
-    // ChannelOpened is sent by the server in response to ChReqOp.ChannelGenesis success.
-    // ChMsg.ValueStr is set to the newly created channel URI.
-    ChannelCreated          = 10;
+    // ReqDiscarded means the referenced request failed and/or has been cancelled.
+    // If ChMsg.Attachment != nil, then it is a serialized ReqErr describing why it was discarded.
+    // As with ReqComplete, the referenced request is now complete, so the given ReqID is now available for (re)use.
+    ReqDiscarded            = 3;
 
     // SyncStep means all pending applicable state changes have been sent for the given ChMsg.ReqID.
     // This msg is only sent if a ChReq specified requested GetAndSync mode. 
@@ -132,9 +132,6 @@ message ChMsg {
                 
     // ReqID references the originating ChReq that this ChMsg is in response to.
                 int32               ReqID                       = 2;
-    
-    // ReqClosed is set if this the referenced ChReq (via ChMsg.ReqID) is considered complete and is now closed.
-                bool                ReqClosed                   = 3;
                     
     // Keypath is a POSIX-style pathname of this channel entry (for safety, "/" specifies the root path, not "").
     // Each path component in a valid Keypath must have a length of at least 2.
@@ -170,7 +167,7 @@ message ChMsg {
                 double              X3                          = 33;
 
     // Attachment is useful to attach any buffer, typically decoded based on ChMsg.Op, ChMsg.Keypath, or ChMsg.TypeID.
-    // It should generally should be limited to around 2MB (hard limit is 4MB).
+    // Max size is limited to 3MB.
                 bytes               Attachment                  = 40;
             
 }
@@ -192,6 +189,9 @@ enum ErrCode {
     URINotFound                 = 5022;
 
     NothingToCommit             = 5030;
+    CommitFailed                = 5031;
+
+    CorruptChEntry              = 5040;
 
     ViolatesAppendOnly          = 5100;
     InsufficientPermissions     = 5101;
