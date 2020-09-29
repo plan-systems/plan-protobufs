@@ -45,9 +45,13 @@ enum FeedMsgOp {
     // As with ReqComplete, the referenced request is now closed/complete, so the given ReqID is now available for (re)use.
     ReqDiscarded            = 3;
 
+    // StatusUpdate is the server reporting progress for the given ReqID.
+    // FeedMsg.MsgData is a serialized ReqStatus.
+    StatusUpdate            = 4;
+
     // RecvVaultCtx contains the latest/updated "VaultCtx" token, stored in FeedMsg.MetaStr.
     // This token can be used in a future OpenFeed request to resume reading from a feed (see StreamMode).
-    RecvVaultCtx            = 4;
+    RecvVaultCtx            = 5;
 
 
     /*
@@ -85,11 +89,11 @@ message FeedMsg {
                 FeedMsgOp           MsgOp                       = 1;
                 
     // ReqID is set to value the originating FeedReq.ReqID was set to.
-                uint32              ReqID                       = 2;
+                int32               ReqID                       = 2;
 
     // FeedID is used for a client request that needs to specify an open feed (e.g. AppendEntry).
     // When set, this is the ReqID of the original OpenFeed request that opened the feed.
-                uint32              FeedID                      = 3;
+                int32               FeedID                      = 3;
     
     // MetaStr is a multi-purpose field used to communicate meta information -- varies per FeedMsgOp.
                 string              MetaStr                     = 4;
@@ -157,6 +161,52 @@ message OpenFeedReq {
     // GenesisEntry signals to create a new feed.
     // If non-nil, FeedURI should be created and this entry should be the first entry appended to it.
                 FeedMsg             GenesisEntry                = 10;
+
+}
+
+
+
+// ReqStatus is used in conjunction with FeedMsgOp.StatusUpdate and expresses milestones for a given client request.  
+message ReqStatus {
+
+    // ReqID is feed request ID that this update is reporting about.
+                int32               ReqID                       = 1;
+
+    // Code describes the status of ReqID.
+                StatusCode          Code                        = 2;
+
+    // Msg is a brief, human-readable message describing the current status of a request (or empty if no additional info is needed)
+                string              Msg                         = 3;
+
+    // If applicable this is a relevant entry ID.
+                int64               EntryID                     = 4;
+
+    // If greater than zero, these are estimates of the work or time remaining.  
+                int64               BytesRemaining              = 10;
+                int64               SecsRemaining               = 11;
+
+}
+
+
+// StatusCode expresses milestones for a given feed request.  
+enum StatusCode {
+
+    // InfoMsg means there is no status change, other than the amplifying message in ReqStatus.Msg
+    InfoMsg                     = 0;
+
+    // WarningMsg means there is no status change, other than the warning message in ReqStatus.Msg.
+    WarningMsg                  = 1;
+
+    // Working is a flag that means that the request is actively being worked and to expect progress on the order several seconds.
+    Working                     = 0x40;
+    FindingPeers                = 0x41;
+    ConnectingToPeers           = 0x42;
+    SearchingForFeed            = 0x43;
+    TransferringFeed            = 0x44;
+
+    // Stalled is a flag that means the vault is in a long-term wait state of some kind with an unbounded completion time.
+    // This flag can be ORed to any of the above "Working" code values to denote that the vault is now stalled. 
+    Stalled                     = 0x80;
 
 }
 
