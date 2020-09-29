@@ -204,8 +204,8 @@ enum StatusCode {
     SearchingForFeed            = 0x43;
     TransferringFeed            = 0x44;
 
-    // Stalled is a flag that means the vault is in a long-term wait state of some kind with an unbounded completion time.
-    // This flag can be ORed to any of the above "Working" code values to denote that the vault is now stalled. 
+    // Stalled is a flag that means the request is in a long-term wait state of some kind with an unbounded completion time.
+    // This flag can be ORed to any of the above "Working" code values.
     Stalled                     = 0x80;
 
 }
