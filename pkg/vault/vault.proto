@@ -197,7 +197,7 @@ enum StatusCode {
     // WarningMsg means there is no status change, other than the warning message in ReqStatus.Msg.
     WarningMsg                  = 1;
 
-    // Working is a flag that means that the request is actively being worked and to expect progress on the order several seconds.
+    // Working is a flag that means that the request is actively being worked and to expect progress on the order of several seconds.
     Working                     = 0x40;
     FindingPeers                = 0x41;
     ConnectingToPeers           = 0x42;
