@@ -45,9 +45,9 @@ enum FeedMsgOp {
     // As with ReqComplete, the referenced request is now closed/complete, so the given ReqID is now available for (re)use.
     ReqDiscarded            = 3;
 
-    // StatusUpdate is the server reporting progress for the given ReqID.
+    // RecvReqStatus is the server reporting progress for the given ReqID.
     // FeedMsg.MsgData is a serialized ReqStatus.
-    StatusUpdate            = 4;
+    RecvReqStatus           = 4;
 
     // RecvVaultCtx contains the latest/updated "VaultCtx" token, stored in FeedMsg.MetaStr.
     // This token can be used in a future OpenFeed request to resume reading from a feed (see StreamMode).
