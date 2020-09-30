@@ -13,23 +13,25 @@ service RepoGrpc {
 
 
 enum Const {
-    ConstDefs                   = 0;
+    ConstDefs               = 0;
 
 	// ChIDSz specifies the byte size of a channel ID (and is the right-most bytes of a TxID).
-	ChIDSz                      = 18;
+	ChIDSz                  = 18;
 
 	// TxIDSz specifies the byte size of a transaction ID.
-	TxIDSz                      = 32;
+	TxIDSz                  = 32;
 
     // DefaultGrpcServicePort is the TCP port the service RepoGrpc should run on by default.
-    DefaultGrpcServicePort      = 5191;
+    DefaultGrpcServicePort  = 5191;
 
 }
 
 
 // ChReqOp is a code describing the purpose and format of the ChReq that it resides in.
 enum ChReqOp {
-    NoOp                    = 0;
+    
+    // Auto means to see if ChReq.PutReq or ChReq.GetReq is set and execute whichever is set.
+    Auto                    = 0;
 
     // CancelReq tells the server to close/cancel the ChReq referenced by ChReq.ReqID.
     CancelReq               = 1;
@@ -39,30 +41,43 @@ enum ChReqOp {
     //   - supply a crypto info, ultimately allowing decryption to occur for subsequent access.
     AccessGrant             = 2;
 
-    // ChannelGenesis creates a new channel in the domain name specified in ChReq.URI.
-    // ChReq.Entries[] are entries that are written into the new channel (and are part of the genesis tx).
-    // In the corresponding reply ReqComplete message:
-    //      - ChMsg.Attachment is set to the resulting TxID.
-    //      - ChMsg.ValueStr is set to the URI of the newly created channel.
-    ChannelGenesis          = 3;
+}
 
-    // Put atomically commits ChReq.Entries[] to the given ChURI.
-    // In the corresponding reply ReqComplete message, ChMsg.Attachment is set to the resulting TxID.
-    Put                     = 8;
-        
-    // Gets the entry (or entries) from the given ChURI.
-    Get                     = 0x0020;
-    GetShallow              = 0x0060;
-    GetDeep                 = 0x00D0;
 
-    // GetKeypathsOnly causes only ChMsg.Keypath strings to be returned (no data retrieval occurs). 
-    // This value is bit-ORed with one of the Get request ops.
-    GetKeypathsOnly         = 0x0400;
+// KeypathScope specifies which entires are considered relevant to a given Keypath. 
+enum KeypathScope {
+    NoScope                 = 0;
+
+    EntryAtKeypath          = 0x01;
+    ChildEntries            = 0x02;
+    AllSubEntries           = 0x06;
+}
+
+
+
+message GetOp {
+
+    // Keypath and Scope together imply which entries are returned.
+                string              Keypath                     = 2;
+                KeypathScope        Scope                       = 3;
 
     // MaintainSync causes the ChReq to remain open and receive entry updates for qualifying keypaths.
     // The server sends the msg ChMsgOp.SyncStep following each atomic batch of updates.
-    // This value is bit-ORed with one of the Get request ops.
-    MaintainSync            = 0x0800;
+                bool                MaintainSync                = 9;
+
+}
+
+// PutOp atomically commits Entries[] to the given ChReq.URI.
+// In the corresponding reply ReqComplete message, ChMsg.Attachment is set to the resulting TxID.
+message PutOp {
+
+    // ChannelGenesis creates a new channel in the domain name specified in ChReq.URI.
+    // ChReq.Entries[] are entries that are written into the new channel (and are part of the genesis tx).
+    // In the corresponding reply ReqComplete message, ChMsg.ValueStr is set to the URI of the newly created channel.
+                bool                ChannelGenesis              = 4;
+
+    // Entries are the operands of ChReq.ChOp.
+    repeated    ChMsg               Entries                     = 6;
 
 }
 
@@ -71,7 +86,7 @@ enum ChReqOp {
 // The client sends a stream of ChReqs and monitors the ChMsgs that a server sends back to monitor status and completion.
 message ChReq {
 
-        // ReqOp requests that the given op to be execute on ChReq.Entries
+    // ReqOp requests that the given op to be execute on ChReq.Entries
                 ChReqOp             ReqOp                       = 1;
 
     // ReqID is a client-assigned ID that allows the client and server to reference this ChReq in the future.
@@ -80,14 +95,15 @@ message ChReq {
 
     // URI identifies the channel URI that this ChReq is requesting to access.
     // Channel URIs take the form of "DomainName/ChannelID".
-                string              URI                         = 3;
+                string              ChURI                       = 3;       
                 
     // ForkReqID specifies an open ChReqID to to use for state & credentials. 
-                int32               ForkReqID                   = 4;
+    //            int32               ForkReqID                   = 4;
 
-    // Entries are the operands of ChReq.ChOp.
-    repeated    ChMsg               Entries                     = 6;
-                          
+    // When ReqOp == ChReqOp.Auto, one of these ops is to be executed.
+    // It's an error to set more than one of these. 
+                GetOp               GetOp                       = 10;          
+                PutOp               PutOp                       = 11;   
 }
 
 
@@ -179,14 +195,15 @@ enum ErrCode {
 
     UnnamedErr                  = 5000;
     InternalErr                 = 5001;
-    ReqCancelled                = 5002;
-    ShuttingDown                = 5003;
+    UnsupporteReqOp             = 5002;
+    ReqCancelled                = 5003;
+    ShuttingDown                = 5004;
     
     ReqIDNotFound               = 5010;
-    ReqIDAlreadyInUse           = 5011;
+   // ReqIDAlreadyInUse           = 5011;
     InvalidKeypath              = 5020;
     InvalidURI                  = 5021;
-    URINotFound                 = 5022;
+    FailedToOpenChURI           = 5022;
 
     NothingToCommit             = 5030;
     CommitFailed                = 5031;
