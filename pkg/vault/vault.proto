@@ -65,7 +65,7 @@ enum FeedMsgOp {
     // CancelReq tells the server to cancel/stop/close the request identified by the given ReqID.
     // Unlike all other client-to-server requests, the ReqID of this msg is not newly issued -- it refers to an existing request.
     // In response, the server sends a ReqDiscarded message containing:
-    //      - ReqCancelled (if the matching ReqID was found and the associated op is now cancelled/closed)
+    //      - ReqCanceled (if the matching ReqID was found and the associated op is now cancelled/closed)
     //      - ReqNotFound (if no matching ReqID was found)
     CancelReq               = 20;
 
@@ -216,7 +216,7 @@ enum ErrCode {
     NoErr                       = 0;
 
     UnnamedErr                  = 5000;
-    ReqCancelled                = 5001;
+    ReqCanceled                 = 5001;
 
     InsufficientPermissions     = 5101;
 
