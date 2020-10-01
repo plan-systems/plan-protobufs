@@ -117,7 +117,7 @@ enum ChMsgOp {
     // Other values in the ChMsg are contextual based on request that was completed.
     ReqComplete             = 1;
 
-    // ReqDiscarded means the referenced request failed and/or has been cancelled.
+    // ReqDiscarded means the referenced request failed and/or has been canceled.
     // If ChMsg.Attachment != nil, then it is a serialized ReqErr describing why it was discarded.
     // As with ReqComplete, the referenced request is now complete, so the given ReqID is now available for (re)use.
     ReqDiscarded            = 3;
@@ -189,18 +189,19 @@ message ChMsg {
 }
 
 
-// ErrCode is used to unambiguously express common errors.
+// ErrCode expresses status and error codes.
 enum ErrCode {
     NoErr                       = 0;
 
     UnnamedErr                  = 5000;
     InternalErr                 = 5001;
     UnsupporteReqOp             = 5002;
-    ReqCancelled                = 5003;
-    ShuttingDown                = 5004;
+    ReqCanceled              	= 5003;
+	ShuttingDown                = 5004;
+	Disconnected				= 5005;
+
     
     ReqIDNotFound               = 5010;
-   // ReqIDAlreadyInUse           = 5011;
     InvalidKeypath              = 5020;
     InvalidURI                  = 5021;
     FailedToOpenChURI           = 5022;
