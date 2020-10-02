@@ -5,9 +5,9 @@ package repo;
 // High-level channel repository RPC.
 service RepoGrpc {
 
-    // RepoService opens the specified channel at a given state and executes a stream of requests from the client.
+    // RepoServiceSession opens the specified channel at a given state and executes a stream of requests from the client.
     // The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
-    rpc         RepoServicePipe(stream ChReq)               returns (stream ChMsg);
+    rpc 		RepoServiceSession(stream ChReq)         		returns (stream ChMsg);
 
 }
 
@@ -15,11 +15,17 @@ service RepoGrpc {
 enum Const {
     ConstDefs               = 0;
 
-	// ChIDSz specifies the byte size of a channel ID (and is the right-most bytes of a TxID).
-	ChIDSz                  = 18;
+	// TIDSz is the byte size of a TID, a hash with an embedded time index.
+	// The purpose of a TID is that it can be sorted chronologically to facilitate storage, searching, and syndication.
+	//
+	// Byte layout is designed so that TIDs are sortable by the embedded timestamp:
+	//    0:6   - Standard UTC timestamp in unix seconds (big endian)
+	//    6:8   - Timestamp fraction (big endian)
+	//    8:30  - Signature/hash
+	TIDSz                  	= 30;
 
-	// TxIDSz specifies the byte size of a transaction ID.
-	TxIDSz                  = 32;
+	// TIDTimestampSz is the number of left-hand bytes in a TID reserved for a time index value.
+    TIDTimestampSz 			= 8;
 
     // DefaultGrpcServicePort is the TCP port the service RepoGrpc should run on by default.
     DefaultGrpcServicePort  = 5191;
@@ -76,7 +82,7 @@ message PutOp {
     // In the corresponding reply ReqComplete message, ChMsg.ValueStr is set to the URI of the newly created channel.
                 bool                ChannelGenesis              = 4;
 
-    // Entries are the operands of ChReq.ChOp.
+	// Entries the channel entries to be written (or deleted)
     repeated    ChMsg               Entries                     = 6;
 
 }
@@ -137,7 +143,7 @@ message ChMsg {
     ** 
     **
     ** META FIELDS 
-    ** These fields are NOT channel entry content fields.  They are used for Repo service request/response flow.
+    ** These fields are NOT channel entry content fields.  They are used for Repo service request/response flow or are meta info. 
     ** They are zeroed before this ChMsg is stored as a channel entry.
     **
     ** 
@@ -164,7 +170,7 @@ message ChMsg {
     ** 
     **/
 
-    // LastModified is a timestamp of when this entry was last altered (in UTC seconds).
+	// LastModified is a timestamp of when this entry was last altered (in UTC seconds << 16).
     // This timestamp is updated when it is written to a channel.
                 int64               LastModified                = 10;
 
@@ -229,7 +235,45 @@ message ReqErr {
 }
 
 
+// Tx contains all the info for a channel URI change.
+// TODO -- this is a short-term workaround to get things running and it contents will be replaced with proper fields.
+message Tx {
 
+	// Derivative content (set to nil for serialization)
+				bytes				TID							= 1;
+				bytes				Hash						= 2;
+
+	// Content
+				ChStateURI        	ChURI                       = 3;          
+				PutOp               PutOp                       = 11; 
+				      
+}
+
+
+// ChStateURI fully specifies a channel URI at a given state.
+message ChStateURI {
+
+				// DomainName specifies the parent community/context name of the given channel ID.  Domain names are how 
+				// channel syndication properties, storage quotas, and prioritization are possible at the vault level.  
+				string              DomainName                	= 1;
+
+				// ChID_TID specifies a channel's TID for a given domain name.
+				// IF this is not set, then ChID is instead used to contain the ChID.
+				bytes               ChID_TID                	= 2;
+
+				// ChID a UTF8 string name of this channel.
+				// IF both ChID and ChID_TID are set, ChID is assumed to contain the base64 representation of ChID_TID.
+				string              ChID             			= 3;
+
+				// StateID is a token that expresses a specific state of the referenced channel. 
+				// If unspecified, the latest state of the channel is implied.
+				string				StateID						= 4;
+
+				// StateCtxID is a context identifer of the issuer of StateID. 
+				// A state ID token only has meaning relative to the context it was issued against. 
+				// If unspecified, the given StateID is a taken with absolute meaning (and not contextual)
+				string				StateCtxID   				= 5;
+}
 
 
 // message SpaceNode {
