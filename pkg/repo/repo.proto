@@ -6,7 +6,8 @@ package repo;
 service RepoGrpc {
 
     // RepoServiceSession opens the specified channel at a given state and executes a stream of requests from the client.
-    // The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
+	// The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
+	// The beating heart of PLAN: channels, streams, information, security, trust, sessions.
     rpc 		RepoServiceSession(stream ChReq)         		returns (stream ChMsg);
 
 }
@@ -60,22 +61,24 @@ enum KeypathScope {
 }
 
 
-
+// GetOp gets the all the channel entries for the given Keypath and the specified scope.
 message GetOp {
 
     // Keypath and Scope together imply which entries are returned.
                 string              Keypath                     = 2;
                 KeypathScope        Scope                       = 3;
 
-    // MaintainSync causes the ChReq to remain open and receive entry updates for qualifying keypaths.
-    // The server sends the msg ChMsgOp.SyncStep following each atomic batch of updates.
+	// MaintainSync causes the ChReq to remain open and receive state updates for qualifying keypaths via ChSyncSuspend/ChSyncResume 
                 bool                MaintainSync                = 9;
 
 }
 
-// PutOp atomically commits Entries[] to the given ChReq.URI.
+// TxOp atomically commits Entries[] (patches) to the given channel URI
 // In the corresponding reply ReqComplete message, ChMsg.Attachment is set to the resulting TxID.
-message PutOp {
+message TxOp {
+
+	// ChStateURI expresses the channel URI that this op applies to.
+				ChStateURI        	ChStateURI                  = 3;      
 
     // ChannelGenesis creates a new channel in the domain name specified in ChReq.URI.
     // ChReq.Entries[] are entries that are written into the new channel (and are part of the genesis tx).
@@ -100,16 +103,20 @@ message ChReq {
                 int32               ReqID                       = 2;
 
     // URI identifies the channel URI that this ChReq is requesting to access.
-    // Channel URIs take the form of "DomainName/ChannelID".
-                string              ChURI                       = 3;       
-                
+	// Channel URIs take the form of "<DomainName>[/<ChID>[/<StateURI>]]".
+				string              ChURI                       = 3;
+				
+	// ChStateURI expresses the channel URI that this op applies to.
+	// If not set, it will be set by parsing ChReq.ChURI.
+				ChStateURI        	ChStateURI                  = 4;      
+
     // ForkReqID specifies an open ChReqID to to use for state & credentials. 
     //            int32               ForkReqID                   = 4;
 
     // When ReqOp == ChReqOp.Auto, one of these ops is to be executed.
     // It's an error to set more than one of these. 
                 GetOp               GetOp                       = 10;          
-                PutOp               PutOp                       = 11;   
+                TxOp                TxOp                      	= 11;   
 }
 
 
@@ -128,9 +135,13 @@ enum ChMsgOp {
     // As with ReqComplete, the referenced request is now complete, so the given ReqID is now available for (re)use.
     ReqDiscarded            = 3;
 
-    // SyncStep means all pending applicable state changes have been sent for the given ChMsg.ReqID.
-    // This msg is only sent if a ChReq specified requested GetAndSync mode. 
-    SyncStep                = 11;
+	// ChSyncSuspend signals to the client that a state update is about to be sent (in the form of a sequence of entry ops).
+	// When all state change messages have been sent, the server sends ChSyncResume.
+    ChSyncSuspend         	= 10;
+
+	// ChSyncResume signals that all pending state changes are have been sent (i.e. channel state is now synced)
+	// If ChMsg.ValueStr is set, it's set to a StateURI that represents the current channel state. 
+	ChSyncResume        	= 11;
 
 }
 
@@ -206,7 +217,6 @@ enum ErrCode {
 	ShuttingDown                = 5004;
 	Disconnected				= 5005;
 
-    
     ReqIDNotFound               = 5010;
     InvalidKeypath              = 5020;
     InvalidURI                  = 5021;
@@ -214,6 +224,7 @@ enum ErrCode {
 
     NothingToCommit             = 5030;
     CommitFailed                = 5031;
+	DomainNotFound				= 5032;
 
     CorruptChEntry              = 5040;
 
@@ -244,8 +255,7 @@ message Tx {
 				bytes				Hash						= 2;
 
 	// Content
-				ChStateURI        	ChURI                       = 3;          
-				PutOp               PutOp                       = 11; 
+				TxOp                TxOp                        = 10; 
 				      
 }
 
@@ -258,32 +268,44 @@ message ChStateURI {
 				string              DomainName                	= 1;
 
 				// ChID_TID specifies a channel's TID for a given domain name.
-				// IF this is not set, then ChID is instead used to contain the ChID.
+				// If this is not set, then the channel ID is considered to be non-binary and is contained in ChID.
 				bytes               ChID_TID                	= 2;
 
-				// ChID a UTF8 string name of this channel.
-				// IF both ChID and ChID_TID are set, ChID is assumed to contain the base64 representation of ChID_TID.
+				// ChID is a UTF8 string name of this channel.
+				// IF both ChID and ChID_TID are set, ChID is assumed to contain the base32 representation of ChID_TID.
 				string              ChID             			= 3;
 
-				// StateID is a token that expresses a specific state of the referenced channel. 
-				// If unspecified, the latest state of the channel is implied.
-				string				StateID						= 4;
-
-				// StateCtxID is a context identifer of the issuer of StateID. 
-				// A state ID token only has meaning relative to the context it was issued against. 
-				// If unspecified, the given StateID is a taken with absolute meaning (and not contextual)
-				string				StateCtxID   				= 5;
+				// StateURI is a token that expresses a specific channel state.
+				// If this is not set, the latest state of the channel is implied.
+				// By convention this is a POSIX-style pathname in the form "<StateContextID>[/<SubStateID>]*"
+				string				StateURI					= 4;
 }
 
 
-// message SpaceNode {
+// RawTx reflects a Tx that has been is packed and sealed.
+message RawTx {
 
-//     // Transform means this Node and its sub nodes should be scaled by [0] (or [0,1,2]) and rotated according to thw quaternion stored in [1,2,3,4] (or [3,4,5,6])
-//     // If omitted, implied scale is 1 and there no rotation is applied.
-//     // For nodes that have this Node as the parent, their coordinates are relative to the coordinate space of this Node.
-//     // Nested Transforms allow Node placements to be of arbitrary precision 
-//     repeated    float               Transform                   = 4;
-// }
+	// TID identifies this Txn (and is a hash or signature for contained Tx)
+                bytes               TID                    		= 1;
+
+   // TxnStatus information about the associated txn
+   				TxnStatus          	TxnStatus                  	= 2;
+
+                bytes               Header             			= 10;
+                bytes               Body                 		= 11;
+}
+
+
+// TxnStatus describes the status of a Tx or RawTx
+enum TxnStatus {
+
+    // New means tx is yet to be committed to storage
+	New                         	= 0;
+	
+}
+
+
+
 
 
 
