@@ -16,20 +16,23 @@ service RepoGrpc {
 enum Const {
     ConstDefs               = 0;
 
-	// TIDSz is the byte size of a TID, a hash with an embedded time index.
+	// TIDSz is the byte size of a TID, a hash with a leading embedded big endian binary time index.
 	// The purpose of a TID is that it can be sorted chronologically to facilitate storage, searching, and syndication.
 	//
 	// Byte layout is designed so that TIDs are sortable by the embedded timestamp:
 	//    0:6   - Standard UTC timestamp in unix seconds (big endian)
 	//    6:8   - Timestamp fraction (big endian)
-	//    8:30  - Signature/hash
-	TIDSz                  	= 30;
+	//    8:32  - Signature/hash
+	TIDSz                  	= 32;
+
+	// TIDEncodedLen is the ASCII-compatible string length of a (binary) TID encoded into its base32 form.
+	TIDEncodedLen			= 52;
 
 	// TIDTimestampSz is the number of left-hand bytes in a TID reserved for a time index value.
     TIDTimestampSz 			= 8;
 
     // DefaultGrpcServicePort is the TCP port the service RepoGrpc should run on by default.
-    DefaultGrpcServicePort  = 5191;
+    DefaultGrpcServicePort  = 5192;
 
 }
 
@@ -73,19 +76,20 @@ message GetOp {
 
 }
 
+
 // TxOp atomically commits Entries[] (patches) to the given channel URI
 // In the corresponding reply ReqComplete message, ChMsg.Attachment is set to the resulting TxID.
 message TxOp {
 
 	// ChStateURI expresses the channel URI that this op applies to.
-				ChStateURI        	ChStateURI                  = 3;      
+				ChStateURI        	ChStateURI                  = 3;
 
     // ChannelGenesis creates a new channel in the domain name specified in ChReq.URI.
     // ChReq.Entries[] are entries that are written into the new channel (and are part of the genesis tx).
     // In the corresponding reply ReqComplete message, ChMsg.ValueStr is set to the URI of the newly created channel.
                 bool                ChannelGenesis              = 4;
 
-	// Entries the channel entries to be written (or deleted)
+	// Entries are changes to be applied to the target channel.
     repeated    ChMsg               Entries                     = 6;
 
 }
@@ -123,25 +127,31 @@ message ChReq {
 // ChMsgOp is a collection of ChMsgOp values that have a special meaning in a ChMsg. 
 enum ChMsgOp {
     
-    // ChEntry means this is a content msg being sent in response to ChMsg.ReqID.
+    // ChEntry means this is a ch entry content msg
     ChEntry                 = 0;
+
+	// ChEntryDelete removes the entry at the given path
+	ChEntryRemove         	= 2;
+
+	// ChEntryRemoveAll removes the entry at the given path and all subs.
+	ChEntryRemoveAll       	= 3;
 
     // ReqComplete means the referenced request (via ChMsg.ReqID) has successfully completed.
     // Other values in the ChMsg are contextual based on request that was completed.
-    ReqComplete             = 1;
+    ReqComplete             = 4;
 
     // ReqDiscarded means the referenced request failed and/or has been canceled.
     // If ChMsg.Attachment != nil, then it is a serialized ReqErr describing why it was discarded.
     // As with ReqComplete, the referenced request is now complete, so the given ReqID is now available for (re)use.
-    ReqDiscarded            = 3;
+    ReqDiscarded            = 5;
 
 	// ChSyncSuspend signals to the client that a state update is about to be sent (in the form of a sequence of entry ops).
 	// When all state change messages have been sent, the server sends ChSyncResume.
-    ChSyncSuspend         	= 10;
+    ChSyncSuspend         	= 8;
 
 	// ChSyncResume signals that all pending state changes are have been sent (i.e. channel state is now synced)
-	// If ChMsg.ValueStr is set, it's set to a StateURI that represents the current channel state. 
-	ChSyncResume        	= 11;
+	// If ChMsg.Str is set, it's set to a StateURI that represents the current channel state. 
+	ChSyncResume        	= 9;
 
 }
 
@@ -168,7 +178,6 @@ message ChMsg {
                     
     // Keypath is a POSIX-style pathname of this channel entry (for safety, "/" specifies the root path, not "").
     // Each path component in a valid Keypath must have a length of at least 2.
-    // Any channel entry written to an invalid keypath will cause InvalidKeypath to be returned. 
                 string              Keypath                     = 5;
 
 
@@ -188,8 +197,8 @@ message ChMsg {
     // Optional values that can express commonly needed fields or allow this entry to be self-describing.
                 string              TypeID                      = 20;
                 string              Label                       = 21; 
-                string              ValueStr                    = 22; 
-                int64               ValueInt                    = 23;
+                string              Str                         = 22; 
+                int64               Int                         = 23;
 
     // X1, X2, and X3 are coordinates or values expressed in any unit.
     // A channel client can later declare how to interpret these coordinates so that a channel server and provide indexed services.
