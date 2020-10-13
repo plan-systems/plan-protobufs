@@ -1,0 +1,81 @@
+syntax = "proto3";
+package pmod;
+
+
+
+
+// AssetFlags describes what kind of asset this is.
+enum AssetFlags {
+	NoFlags							= 0;
+
+	// IsPrefab means the asset name ends with an implicit ".prefab", though this is not part of the official asset PID.
+	//IsPrefab              			= 0x0001;
+
+	IsSkybox						= 0x0002;
+	IsSprite						= 0x0004;
+	IsMaterial						= 0x0008;
+	IsPlacable   					= 0x0010;
+	IsSpace							= 0x0020;
+	
+	// IsThumbnail means that this is a scaled-down, representative sprite intended to represent another asset.
+	IsThumbnail						= 0x0100;
+}
+
+message AssetEntry {
+				AssetFlags			AssetFlags					= 1;
+				string            	AssetName              		= 2;
+				string				AssetNameEx		     		= 3;
+}
+
+
+message BundleManifest {
+
+	// BundlePID takes the form: "modulePID/BundleName/"
+				string             	BundlePID        			= 1;
+				string             	BundleName        			= 2;
+				string             	BundleFilename        		= 3;
+				string             	BundleGlyph     			= 4;
+
+	repeated 	AssetEntry			Assets 						= 10;
+
+				bool				LoadAllHint					= 20;
+
+}
+
+// ModuleManifest is the top-level manifest/catalog for a PLAN module.  It contains catalog and type info
+// that PLAN loads at runtime to know what's inside binary asset bundles without having to open and access them.
+//
+// A reference to a PLAN asset is via an asset path ID ("PID").
+// An asset PID is a case sensitive POSIX-style pathname having the form:
+//     assetPID := "modulePID/bundleName[.revisionID]/assetName"
+//
+// where:
+//     modulePID := "domainName/moduleName"
+//
+message ModuleManifest {
+
+
+	// DomainName is the root name of a ModuleName
+	//
+	// e.g. 
+	//    "plan-systems.org"
+	//    "themushroom.farm" 
+				string             	DomainName              	= 1;
+
+	// ModuleName is a POSIX-style pathname of this module.
+	//
+	// e.g. 
+	//    "plan-systems.org/plan-app"
+	//    "plan-systems.org/about-plan-systems"
+	//    "plan-systems.org/welcome-to-plan"
+	//    "themushroom.farm/common"     
+	//    "themushroom.farm/mycology-101"     
+	//    "themushroom.farm/mycology-201"     
+				string             	ModuleName              	= 2;
+
+				string				ModuleDesc					= 5;
+				string				ModuleGlyph					= 6;
+
+	repeated 	BundleManifest    	Bundles                  	= 10;
+
+}
