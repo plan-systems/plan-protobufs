@@ -8,7 +8,7 @@ service RepoGrpc {
     // RepoServiceSession opens the specified channel at a given state and executes a stream of requests from the client.
 	// The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
 	// The beating heart of PLAN: channels, streams, information, security, trust, sessions.
-    rpc 		RepoServiceSession(stream ChReq)         		returns (stream ChMsg);
+    rpc 		RepoServiceSession(stream ChReq)         		returns (stream Node);
 
 }
 
@@ -78,7 +78,7 @@ message GetOp {
 
 
 // TxOp atomically commits Entries[] (patches) to the given channel URI
-// In the corresponding reply ReqComplete message, ChMsg.Attachment is set to the resulting TxID.
+// In the corresponding reply ReqComplete message, Node.Attachment is set to the resulting TxID.
 message TxOp {
 
 	// ChStateURI expresses the channel URI that this op applies to.
@@ -86,24 +86,24 @@ message TxOp {
 
     // ChannelGenesis creates a new channel in the domain name specified in ChReq.URI.
     // ChReq.Entries[] are entries that are written into the new channel (and are part of the genesis tx).
-    // In the corresponding reply ReqComplete message, ChMsg.ValueStr is set to the URI of the newly created channel.
+    // In the corresponding reply ReqComplete message, Node.Str is set to the URI of the newly created channel.
                 bool                ChannelGenesis              = 4;
 
 	// Entries are changes to be applied to the target channel.
-    repeated    ChMsg               Entries                     = 6;
+    repeated    Node              	Entries                     = 6;
 
 }
 
 
 // ChReq is generalized request sent from client to server via ServeChannel(). 
-// The client sends a stream of ChReqs and monitors the ChMsgs that a server sends back to monitor status and completion.
+// The client sends a stream of ChReqs and monitors the Nodes that a server sends back to monitor status and completion.
 message ChReq {
 
     // ReqOp requests that the given op to be execute on ChReq.Entries
                 ChReqOp             ReqOp                       = 1;
 
     // ReqID is a client-assigned ID that allows the client and server to reference this ChReq in the future.
-    // ChMsg.ReqComplete & ReqDiscarded is how the server signals when this request is considered closed/complete.
+    // Node.ReqComplete & ReqDiscarded is how the server signals when this request is considered closed/complete.
                 int32               ReqID                       = 2;
 
     // URI identifies the channel URI that this ChReq is requesting to access.
@@ -124,24 +124,24 @@ message ChReq {
 }
 
 
-// ChMsgOp is a collection of ChMsgOp values that have a special meaning in a ChMsg. 
-enum ChMsgOp {
+// NodeOp is a collection of NodeOp values that express how a Node is to be interpreted.
+enum NodeOp {
     
-    // ChEntry means this is a ch entry content msg
+    // ChEntry means this is a ch entry content node
     ChEntry                 = 0;
 
 	// ChEntryDelete removes the entry at the given path
 	ChEntryRemove         	= 2;
 
 	// ChEntryRemoveAll removes the entry at the given path and all subs.
-	ChEntryRemoveAll       	= 3;
+	ChEntryRemoveAll     	= 3;
 
-    // ReqComplete means the referenced request (via ChMsg.ReqID) has successfully completed.
-    // Other values in the ChMsg are contextual based on request that was completed.
+    // ReqComplete means the referenced request (via Node.ReqID) has successfully completed.
+    // Other values in the Node are contextual based on request that was completed.
     ReqComplete             = 4;
 
     // ReqDiscarded means the referenced request failed and/or has been canceled.
-    // If ChMsg.Attachment != nil, then it is a serialized ReqErr describing why it was discarded.
+    // If Node.Attachment != nil, then it is a serialized ReqErr describing why it was discarded.
     // As with ReqComplete, the referenced request is now complete, so the given ReqID is now available for (re)use.
     ReqDiscarded            = 5;
 
@@ -150,30 +150,30 @@ enum ChMsgOp {
     ChSyncSuspend         	= 8;
 
 	// ChSyncResume signals that all pending state changes are have been sent (i.e. channel state is now synced)
-	// If ChMsg.Str is set, it's set to a StateURI that represents the current channel state. 
+	// If Node.Str is set, it's set to a StateURI that represents the current channel state. 
 	ChSyncResume        	= 9;
 
 }
 
 
 
-// ChMsg is the generalized response object a server sends to the client as it processes each ChReq sent by the client. 
-message ChMsg {
+// Node is the generalized response object a server sends to the client as it processes each ChReq sent by the client. 
+message Node {
 
     /*
     ** 
     **
     ** META FIELDS 
     ** These fields are NOT channel entry content fields.  They are used for Repo service request/response flow or are meta info. 
-    ** They are zeroed before this ChMsg is stored as a channel entry.
+    ** They are zeroed before this Node is stored as a channel entry.
     **
     ** 
     **/
 
-    // Op tells the client with this channel open that kind of ChMsg this is.
-                ChMsgOp             Op                          = 1;
+    // Op tells the client with this channel open that kind of Node this is.
+                NodeOp            	Op                          = 1;
                 
-    // ReqID references the originating ChReq that this ChMsg is in response to.
+    // ReqID references the originating ChReq that this Node is in response to.
                 int32               ReqID                       = 2;
                     
     // Keypath is a POSIX-style pathname of this channel entry (for safety, "/" specifies the root path, not "").
@@ -198,7 +198,12 @@ message ChMsg {
                 string              TypeID                      = 20;
                 string              Label                       = 21; 
                 string              Str                         = 22; 
-                int64               Int                         = 23;
+				int64               Int                         = 23;
+
+	// GlyphURI is also also optional and similar to a conventional icon.
+	// The difference is that this is an glyph asset URI that can imply different asset types depending on the context.
+	// Typically, this means either a 2D texture ("sprite") for 2D use-cases, or a 3D object in space.
+				string              GlyphURI                  	= 24; 
 
     // X1, X2, and X3 are coordinates or values expressed in any unit.
     // A channel client can later declare how to interpret these coordinates so that a channel server and provide indexed services.
@@ -208,7 +213,7 @@ message ChMsg {
                 double              X2                          = 32;
                 double              X3                          = 33;
 
-    // Attachment is useful to attach any buffer, typically decoded based on ChMsg.Op, ChMsg.Keypath, or ChMsg.TypeID.
+    // Attachment is useful to attach any buffer, typically decoded based on Node.Op, Node.Keypath, or Node.TypeID.
     // Max size is limited to 3MB.
                 bytes               Attachment                  = 40;
             
@@ -244,7 +249,7 @@ enum ErrCode {
 }
 
 
-// ReqErr wraps errors and is typically used in conjunction with ChMsgOp.ChReqErr
+// ReqErr wraps errors and is typically used in conjunction with NodeOp.ChReqErr
 message ReqErr {
 
                 ErrCode             Code                        = 1;
