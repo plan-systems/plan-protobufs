@@ -8,17 +8,24 @@ package pmod;
 enum AssetFlags {
 	NoFlags							= 0;
 
-	// IsPrefab means the asset name ends with an implicit ".prefab", though this is not part of the official asset PID.
-	//IsPrefab              			= 0x0001;
+	IsTex2D							= 0x0001;
+	IsSprite						= 0x0002;
+	IsMaterial						= 0x0004;
 
-	IsSkybox						= 0x0002;
-	IsSprite						= 0x0004;
-	IsMaterial						= 0x0008;
-	IsPlacable   					= 0x0010;
-	IsSpace							= 0x0020;
-	
-	// IsThumbnail means that this is a scaled-down, representative sprite intended to represent another asset.
-	IsThumbnail						= 0x0100;
+	// HasIcon means that this Asset includes an icon with the same name (and has IsIcon set),
+	HasIcon							= 0x0010;
+
+	// IsIcon means this is a scaled-down, representative 2D sprite intended to represent the primary asset.
+	IsIcon  						= 0x0020;
+
+	IsPlacable 						= 0x0040;
+	IsSkybox						= 0x0080;
+	IsSpace							= 0x0100;
+
+//	IsStructure   					= 0x0010;
+//	IsArea   						= 0x0080;
+
+
 }
 
 message AssetEntry {
