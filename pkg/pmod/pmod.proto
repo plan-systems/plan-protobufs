@@ -6,7 +6,7 @@ package pmod;
 
 // AssetFlags describes what kind of asset this is.
 enum AssetFlags {
-	NoFlags							= 0;
+	NoFlags  						= 0;
 
 	IsTex2D							= 0x0001;
 	IsSprite						= 0x0002;
@@ -28,20 +28,25 @@ enum AssetFlags {
 
 }
 
+
 message AssetEntry {
+
+	// Flags specifies properties about this asset.
 				AssetFlags			AssetFlags					= 1;
-				string            	AssetName              		= 2;
-				string				AssetNameEx		     		= 3;
+				string				URI		     				= 2;
+				string				Label 						= 3;
 }
 
 
 message BundleManifest {
 
-	// BundlePID takes the form: "modulePID/BundleName/"
-				string             	BundlePID        			= 1;
-				string             	BundleName        			= 2;
-				string             	BundleFilename        		= 3;
-				string             	BundleGlyph     			= 4;
+				string             	ParentModule        		= 1;
+
+	// BundlePublicName is how the outside world names this bundle.
+				string             	BundlePublicName        	= 2;
+
+	// BundleBuildName is how this bundle is internally named.
+				string             	BundleBuildName        		= 3;
 
 	repeated 	AssetEntry			Assets 						= 10;
 
@@ -81,7 +86,9 @@ message ModuleManifest {
 				string             	ModuleName              	= 2;
 
 				string				ModuleDesc					= 5;
-				string				ModuleGlyph					= 6;
+
+	// BrowserBundle is the name of the bundle containing assets and info used to browse this module.
+				string				BrowserBundle				= 8;
 
 	repeated 	BundleManifest    	Bundles                  	= 10;
 
