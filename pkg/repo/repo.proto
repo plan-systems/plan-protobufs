@@ -17,16 +17,17 @@ enum Const {
     ConstDefs               = 0;
 
 	// TIDSz is the byte size of a TID, a hash with a leading embedded big endian binary time index.
-	// The purpose of a TID is that it can be sorted chronologically to facilitate storage, searching, and syndication.
+	// The purpose of a TID is that it can be sorted chronologically in order to facilitate 
+	// storage, searching, and syndication in large (real-world) TID blob repositories.
 	//
 	// Byte layout is designed so that TIDs are sortable by the embedded timestamp:
 	//    0:6   - Standard UTC timestamp in unix seconds (big endian)
 	//    6:8   - Timestamp fraction (big endian)
 	//    8:32  - Signature/hash
-	TIDSz                  	= 32;
+	TIDSz                  	= 30;
 
 	// TIDEncodedLen is the ASCII-compatible string length of a (binary) TID encoded into its base32 form.
-	TIDEncodedLen			= 52;
+	TIDEncodedLen			= 48;
 
 	// TIDTimestampSz is the number of left-hand bytes in a TID reserved for a time index value.
     TIDTimestampSz 			= 8;
@@ -194,29 +195,67 @@ message Node {
     // This timestamp is updated when it is written to a channel.
                 int64               LastModified                = 10;
 
-    // Optional values that can express commonly needed fields or allow this entry to be self-describing.
-                string              TypeID                      = 20;
-                string              Label                       = 21; 
-                string              Str                         = 22; 
-				int64               Int                         = 23;
+    // TypeID is a "multi-codec" style (POSIX-style type pathname) that self-describes this Node and the information within it. 
+				string              TypeID                      = 15;
 
-	// GlyphURI is also also optional and similar to a conventional icon.
-	// The difference is that this is an glyph asset URI that can imply different asset types depending on the context.
-	// Typically, this means either a 2D texture ("sprite") for 2D use-cases, or a 3D object in space.
-				string              GlyphURI                  	= 24; 
+	// GlyphURI is a loose analog to the conventional use of "icon" and refer to a unit-sized graphic or volume.
+	// Glyph URIs can allow the encoding of arbitrary parameters (such as color), allowing variants to be offered at no cost.
+	// A given glyph URI often has both a 2D ("sprite") and 3D object form and is chosen based on where it's instanced.
+				string              GlyphURI                  	= 20; 
 
-    // X1, X2, and X3 are coordinates or values expressed in any unit.
-    // A channel client can later declare how to interpret these coordinates so that a channel server and provide indexed services.
-    // Shoutout to the 3 domains that reflect all theoretical completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s).
-    // Special thanks to Michael at Vsauce: https://www.youtube.com/watch?v=SrU9YDoXE88
-                double              X1                          = 31;
-                double              X2                          = 32;
-                double              X3                          = 33;
+	// Label is a human readable descriptor for this item, with LabelFormat describing what format it's in.
+				string              Label                       = 22;
+				TextFormat			LabelFormat					= 23;
+
+	// Optional values that can express needed values in accordance of TypeID .
+                string              Str                         = 24; 
+				int64               Int                         = 25;
+
+	// Placement specifies how this Node should be placed in a space.
+				Placement    		Placement          			= 30; 
 
     // Attachment is useful to attach any buffer, typically decoded based on Node.Op, Node.Keypath, or Node.TypeID.
     // Max size is limited to 3MB.
                 bytes               Attachment                  = 40;
             
+}
+
+enum TextFormat {
+	PlainText			= 0;
+	RTF					= 1;
+	HTML				= 2;
+}
+
+enum PlacementFlags {
+	AutoPlace = 0;
+}
+
+message Placement {
+
+				PlacementFlags		Flags						= 3;
+
+    // X1, X2, and X3 are coordinates or values expressed in any unit.
+    // A channel client can later declare how to interpret these coordinates so that a channel server and provide indexed services.
+    // Shoutout to the 3 domains that reflect all theoretical completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s).
+    // Special thanks to Michael at Vsauce: https://www.youtube.com/watch?v=SrU9YDoXE88
+                double              X1                          = 11;
+                double              X2                          = 12;
+				double              X3                          = 13;
+				
+    // Placement means this Node and its sub nodes should be scaled by [0] (or [0,1,2]) and rotated according to thw quaternion stored in [1,2,3,4] (or [3,4,5,6])
+    // If omitted, implied scale is 1 and there no rotation is applied.
+    // For nodes that have this Node as the parent, their coordinates are relative to the coordinate space of this Node.
+    // Nested Placements allow Node placements to be of arbitrary precision 
+	repeated 	float				Transform					= 2;
+
+	// AssetURI is also also optional and implies an asset for each possible type (e.g. sprite, 3D object), specified 
+	// A single asset URI that can imply different asset types depending on the context (or explicit request), allowing a single
+	//     asset URI imply multiple asset types.
+	// Asset URIs allow the encoding of arbitrary parameters (such as color), allowing variants to be offered at no cost.
+				string              AssetURI                  	= 28; 
+
+				// int32				ID							= 20;
+				// int32				ParentID					= 21;
 }
 
 
@@ -314,12 +353,31 @@ message RawTx {
 enum TxnStatus {
 
     // New means tx is yet to be committed to storage
-	New                         	= 0;
+	New                         = 0;
 	
 }
 
+// OrgFlags is for minor UX adaptations in default naming, nomenclature, and phraseology.
+enum OrgFlags {
+	IsCommunity					= 0;
+
+	IsLegalOrganization			= 0x0001;
+	IsCompany					= 0x0002;
+	IsFederation				= 0x0004;
+	IsPersonal					= 0x0010;
+}
 
 
+message OrgInfo {
+
+				string				CommonName					= 1;
+				string				FormalName					= 2;
+				string				DomainName					= 3;
+
+				OrgFlags			OrgFlags					= 10;
+				string				GenesisTID 					= 11;
+
+}
 
 
 
