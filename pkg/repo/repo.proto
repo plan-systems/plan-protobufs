@@ -211,51 +211,40 @@ message Node {
                 string              Str                         = 24; 
 				int64               Int                         = 25;
 
-	// Placement specifies how this Node should be placed in a space.
-				Placement    		Placement          			= 30; 
-
-    // Attachment is useful to attach any buffer, typically decoded based on Node.Op, Node.Keypath, or Node.TypeID.
+	// Attachment is useful to attach any buffer, typically decoded based on Node.Op, Node.Keypath, or Node.TypeID.
     // Max size is limited to 3MB.
-                bytes               Attachment                  = 40;
-            
+				bytes               Attachment                  = 30;
+				
+	// AssetURI specifies an asset URI (typically implicitly placed at this node's position, scale, and orientation.
+	// Asset URIs allow the encoding of arbitrary parameters (such as color), allowing variants to be offered at no cost.
+				string              AssetURI                  	= 35; 
+
+    // X1, X2, and X3 are coordinates or values expressed in any unit.
+    // A channel client can later declare how to interpret these coordinates so that a channel server and provide indexed services.
+    // Shoutout to the 3 domains that reflect all theoretical completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s).
+    // Special thanks to Michael at Vsauce: https://www.youtube.com/watch?v=SrU9YDoXE88
+				double              X1                          = 41;
+				double              X2                          = 42;
+				double              X3                          = 43;
+	
+	// Scale1 to Scale3 express the scale of this Node. 
+	// If all three values are 0, they are all implicitly 1.
+	// If Scale2 or Scale3 == 0, then it is implicitly Scale1.
+				float              	Scale1                      = 51;
+				float              	Scale2                      = 52;
+				float              	Scale3                      = 53;
+
+	// Rotate1 - Rotate3 the orientation of this Node using Euler angles.
+				float              	Rotate1                 	= 60;
+				float              	Rotate2                    	= 61;
+				float               Rotate3                   	= 62;
+
 }
 
 enum TextFormat {
 	PlainText			= 0;
 	RTF					= 1;
 	HTML				= 2;
-}
-
-enum PlacementFlags {
-	AutoPlace = 0;
-}
-
-message Placement {
-
-				PlacementFlags		Flags						= 3;
-
-    // X1, X2, and X3 are coordinates or values expressed in any unit.
-    // A channel client can later declare how to interpret these coordinates so that a channel server and provide indexed services.
-    // Shoutout to the 3 domains that reflect all theoretical completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s).
-    // Special thanks to Michael at Vsauce: https://www.youtube.com/watch?v=SrU9YDoXE88
-                double              X1                          = 11;
-                double              X2                          = 12;
-				double              X3                          = 13;
-				
-    // Placement means this Node and its sub nodes should be scaled by [0] (or [0,1,2]) and rotated according to thw quaternion stored in [1,2,3,4] (or [3,4,5,6])
-    // If omitted, implied scale is 1 and there no rotation is applied.
-    // For nodes that have this Node as the parent, their coordinates are relative to the coordinate space of this Node.
-    // Nested Placements allow Node placements to be of arbitrary precision 
-	repeated 	float				Transform					= 2;
-
-	// AssetURI is also also optional and implies an asset for each possible type (e.g. sprite, 3D object), specified 
-	// A single asset URI that can imply different asset types depending on the context (or explicit request), allowing a single
-	//     asset URI imply multiple asset types.
-	// Asset URIs allow the encoding of arbitrary parameters (such as color), allowing variants to be offered at no cost.
-				string              AssetURI                  	= 28; 
-
-				// int32				ID							= 20;
-				// int32				ParentID					= 21;
 }
 
 
