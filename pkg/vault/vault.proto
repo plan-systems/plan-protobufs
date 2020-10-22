@@ -60,7 +60,7 @@ message FeedReq {
     // StreamMode specifies if and where the server should start streaming feed entries.
                 StreamMode          StreamMode                  = 11;
 
-    // SeekEntryID tells the server where to start streaming.
+    // SeekTID tells the server where to start streaming.
                 string              SeekTID                		= 12;
 
     // MaxEntriesToSend limits the number of entries the server will stream.
@@ -81,32 +81,32 @@ message FeedReq {
     // // VaultCtx provides context for SeekEntryID -- see StreamMode.
     //             string              VaultCtx                    = 5;
 
-
+    // // RecvVaultCtx contains the latest/updated "VaultCtx" token, stored in FeedMsg.MetaStr.
+    // // This token can be used in a future OpenFeed request to resume reading from a feed (see StreamMode).
+    // RecvVaultCtx            = 5;
 
 // MsgOp tells a holder of a Msg how to interpret its fields.
 // On general this is how a Vault communicates to a client.
 enum MsgOp {
 
 
-    // RecvEntry delivers the next entry in a feed stream identified by FeedMsg.ReqID.
-    RecvEntry               = 0;
+    // FeedEntry delivers the next entry in a feed stream identified by FeedMsg.ReqID.
+    FeedEntry               = 0;
 
     // ReqComplete means the referenced request (via FeedMsg.ReqID) has successfully completed.
     // Other values in the FeedMsg are contextual the op that was completed.
     ReqComplete             = 1;
 
     // ReqDiscarded means the referenced request failed and/or has been cancelled.
-    // If FeedMsg.MsgData != nil, then it is a serialized ReqErr describing why it was discarded.
+    // If Msg.MsgData != nil, then it is a serialized ReqErr describing why it was discarded.
     // As with ReqComplete, the referenced request is now closed/complete, so the given ReqID is now available for (re)use.
     ReqDiscarded            = 3;
 
-    // RecvReqStatus is the server reporting progress for the given ReqID.
+    // FeedReqStatus is the server reporting progress for the given ReqID.
     // FeedMsg.MsgData is a serialized ReqStatus.
-    RecvReqStatus           = 4;
+    FeedReqStatus           = 4;
 
-    // RecvVaultCtx contains the latest/updated "VaultCtx" token, stored in FeedMsg.MetaStr.
-    // This token can be used in a future OpenFeed request to resume reading from a feed (see StreamMode).
-    RecvVaultCtx            = 5;
+
 
 }
 
