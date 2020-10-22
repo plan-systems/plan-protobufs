@@ -14,7 +14,10 @@ service VaultGrpc {
 
 
 enum Const {
-    ConstDefs          		= 0;
+	ConstDefs          		= 0;
+	
+	// EntryIDSz is the expected byte size of an EntryID
+	EntryIDSz				= 30;
 
     // DefaultGrpcServicePort is the TCP port number that the service VaultGrpc should run on by default.
     DefaultGrpcServicePort	= 5190;
@@ -24,22 +27,24 @@ enum Const {
 
 // ReqOp is a code describing the purpose and format of the vault Req that it resides in.
 enum ReqOp {
-	
-	// Auto means to see if Req.PutReq or ChReq.GetReq is set and execute whichever is set.
-    Auto                    = 0;
+
+    // AppendEntry requests that FeedReq.NewEntry is appended to the given stream URI.
+    // When this entry has been committed, a ReqComplete will be returned.
+	AppendEntry             = 0;
+
+    // ChannelGenesis creates a new channel specified in FeedReq.FeedURI
+    // FeedReq.NewEntry is written into the new channel (and is the channel genesis entry).
+	ChannelGenesis         	= 1;
 
     // CancelReq tells the server to cancel/stop/close the request identified by the given ReqID.
     // Unlike all other client-to-server requests, the ReqID of this msg is not newly issued -- it refers to an existing request.
-    CancelReq               = 20;
+    CancelReq               = 10;
 
-    // OpenFeed requests to open a given feed for reading (using other various params of FeedReq)
-    // This ReqID of this msg used as FeedMsg.FeedID for subsequent requests that need to refer to an open feed (e.g. AppendEntry).
-    // On success, the server does not send a response and either begins streaming (if it was requested) and/or awaits requests for the opened feed. 
+    // OpenFeed requests to open a given channel feed based on the params in FeedReq.OpenFeed
+    // On success, the server does not send a response and either begins streaming (if it was requested) and/or awaits requests for channel feed. 
     OpenFeed                = 30;
 
-    // AppendEntry requests that FeedReq.NewEntry is appended to the given stream URI.
-    // When this entry has been committed, a ReqComplete will be returned containing the newly assigned EntryID.
-    AppendEntry             = 35;
+	
 
 }
 
@@ -53,6 +58,18 @@ message FeedReq {
     // Node.ReqComplete & ReqDiscarded is how the server signals when this request is considered closed/complete.
                 int32               ReqID                       = 2;
 
+	// OpenFeed opens a feed for access.
+				OpenFeedReq			OpenFeed					= 10;			
+
+    // NewEntry is contains an entry to be appended to this feed.
+    // If non-nil, FeedURI should be created and this entry should be the first entry appended to it.
+                Msg             	NewEntry                	= 20;
+
+}
+
+
+message OpenFeedReq {
+
     // FeedURI is the feed name to be opened.  
     // A feed URI a case-sensitive, UTF8, POSIX-style pathname.
                 string              FeedURI                     = 10;
@@ -60,35 +77,40 @@ message FeedReq {
     // StreamMode specifies if and where the server should start streaming feed entries.
                 StreamMode          StreamMode                  = 11;
 
-    // SeekTID tells the server where to start streaming.
-                string              SeekTID                		= 12;
+    // SeekEntryID tells the server where to start streaming.
+                bytes              	SeekEntryID                	= 12;
 
     // MaxEntriesToSend limits the number of entries the server will stream.
     // If 0, then no limit is set.
                 int32               MaxEntriesToSend            = 13;
 
     // SendEntryIDsOnly tells the server to only send EntryIDs (MsgData and MsgCodec will be nil) 
-                bool                SendEntryIDsOnly            = 14;
+				bool                SendEntryIDsOnly            = 14;
+				
+}
 
-    // NewEntry signals to create a new feed.
-    // If non-nil, FeedURI should be created and this entry should be the first entry appended to it.
-                Msg             	NewEntry                	= 20;
+
+message EntryHeader {
+
+	// EntryID names the entry being posted and is a binary ID based on a hash of the entry body.  
+	// The vault can safely assume that no two entries will ever share the same EntryID.
+	// The expected byte size of this ID (and all other entry IDs is Const.EntryIDSz)
+				bytes               EntryID              		= 1;
+
+	// ParentID names a parent of this feed entry ID and intended to be an aid for a vault to help find and recover missing entries in a feed.
+				bytes               ParentID              		= 10;
+
+	// EntryCodec is a POSIX-style pathname that describes the encoding of this entry's data body.
+	// It is not needed/used by the vault (with the exception that vaults may insert entries into a feed stream to meta-communicate).
+				string             	EntryCodec              	= 11;
 
 }
 
 
 
-    // // VaultCtx provides context for SeekEntryID -- see StreamMode.
-    //             string              VaultCtx                    = 5;
-
-    // // RecvVaultCtx contains the latest/updated "VaultCtx" token, stored in FeedMsg.MetaStr.
-    // // This token can be used in a future OpenFeed request to resume reading from a feed (see StreamMode).
-    // RecvVaultCtx            = 5;
-
 // MsgOp tells a holder of a Msg how to interpret its fields.
 // On general this is how a Vault communicates to a client.
 enum MsgOp {
-
 
     // FeedEntry delivers the next entry in a feed stream identified by FeedMsg.ReqID.
     FeedEntry               = 0;
@@ -98,32 +120,20 @@ enum MsgOp {
     ReqComplete             = 1;
 
     // ReqDiscarded means the referenced request failed and/or has been cancelled.
-    // If Msg.MsgData != nil, then it is a serialized ReqErr describing why it was discarded.
+    // If Msg.Body != nil, then it is a serialized ReqErr describing why it was discarded.
     // As with ReqComplete, the referenced request is now closed/complete, so the given ReqID is now available for (re)use.
     ReqDiscarded            = 3;
 
     // FeedReqStatus is the server reporting progress for the given ReqID.
-    // FeedMsg.MsgData is a serialized ReqStatus.
+    // FeedMsg.Body is a serialized ReqStatus.
     FeedReqStatus           = 4;
-
-
 
 }
 
 
 
-// Msg is the generalized response object that a vault sends to the client as it processes each FeedReq sent by the client. 
+// Msg is the generalized response object that a vault sends to the client as it processes each requests sent by the client. 
 message Msg {
-
-    /*
-    ** 
-    **
-    ** META FIELDS 
-    ** These fields are NOT content fields.  They are used for Vault service request/response flow or are meta info. 
-    ** They are zeroed before this Node is stored as a channel entry.
-    **
-    ** 
-    **/
 
     // MsOp tells the client how to interpret the fields in this FeedMsg.
                 MsgOp           	Op                       	= 1;
@@ -131,23 +141,11 @@ message Msg {
     // ReqID is set to value the originating FeedReq.ReqID was set to.
                 int32               ReqID                       = 2;
 
-    // FeedID is used for a client request that needs to specify an open feed (e.g. AppendEntry).
-    // When set, this is the ReqID of the original OpenFeed request that opened the feed.
-                int32               FeedID                      = 3;
-    
-    // MetaStr is a multi-purpose field used to communicate meta information -- varies per FeedMsgOp.
-                string              MetaStr                     = 4;
-
-    // MsgData is a multi-purpose content buffer that is contextual to each FeedMsgOp.
-                bytes               MsgData                     = 5;
-
-    // MsgCodec specifies the type and encoding of FeedMsg.MsgData.
-    // FeedMsg.MsgData & MsgCodec originate from a client via FeedReqOp.AppendEntry.
-    // Note: negative values are reserved for feed infrastructure internal use and can be ignored by the client.
-                int32               MsgCodec                    = 10;
-
-    // EntryID identifies a particular entry in this feed during this session.
-                int64               EntryID                     = 12;
+    // EntryHeader, if non-nil, provides info about the entry contained in Msg.Body.
+				EntryHeader       	EntryHeader                	= 8;
+				
+	// Body is typically an entry's data body, but may be other forms of serialized data depending on Msg.Op
+				bytes				Body						= 10;
 
 }
 
@@ -190,7 +188,7 @@ message ReqStatus {
                 string              Msg                         = 3;
 
     // If applicable this is a relevant entry ID.
-                int64               EntryID                     = 4;
+                bytes               EntryID                     = 4;
 
     // If greater than zero, these are estimates of the work or time remaining.  
                 int64               BytesRemaining              = 10;
