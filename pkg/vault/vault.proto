@@ -5,33 +5,88 @@ package vault;
 // VaultGrpc is append-only feed server model.
 service VaultGrpc {
 
-    // FeedServicePipe offers a client service to a vault's feed repo.
-    // The client submits requests to be executed, and the server streams feed entries and completion status.
-    // The return stream remains open as long as the client stream remains open.
-    rpc         FeedServicePipe(stream FeedMsg)           returns (stream FeedMsg);
+    // VaultSession offers a client service to a vault's feed repo.
+    // The client submits requests to be executed, and the vault streams response msgs.
+    // The session stream remains open as long as the client maintains its open.
+    rpc 		VaultSession(stream FeedReq)       	returns (stream Msg);
 
 }
 
 
 enum Const {
-    ConstDefs                   = 0;
+    ConstDefs          		= 0;
 
     // DefaultGrpcServicePort is the TCP port number that the service VaultGrpc should run on by default.
-    DefaultGrpcServicePort      = 5190;
+    DefaultGrpcServicePort	= 5190;
 }
 
 
-// FeedMsgOp tells a holder of a FeedMsg how to interpret its fields.
-// The implicit context is if it's a message a server sends to a client or vice versa.
-enum FeedMsgOp {
 
-    /*
-    ** 
-    ** 
-    ** SERVER RESPONSES
-    ** 
-    ** 
-    **/
+// ReqOp is a code describing the purpose and format of the vault Req that it resides in.
+enum ReqOp {
+	
+	// Auto means to see if Req.PutReq or ChReq.GetReq is set and execute whichever is set.
+    Auto                    = 0;
+
+    // CancelReq tells the server to cancel/stop/close the request identified by the given ReqID.
+    // Unlike all other client-to-server requests, the ReqID of this msg is not newly issued -- it refers to an existing request.
+    CancelReq               = 20;
+
+    // OpenFeed requests to open a given feed for reading (using other various params of FeedReq)
+    // This ReqID of this msg used as FeedMsg.FeedID for subsequent requests that need to refer to an open feed (e.g. AppendEntry).
+    // On success, the server does not send a response and either begins streaming (if it was requested) and/or awaits requests for the opened feed. 
+    OpenFeed                = 30;
+
+    // AppendEntry requests that FeedReq.NewEntry is appended to the given stream URI.
+    // When this entry has been committed, a ReqComplete will be returned containing the newly assigned EntryID.
+    AppendEntry             = 35;
+
+}
+
+
+message FeedReq {
+
+    // ReqOp requests that the given op to be execute on ChReq.Entries
+                ReqOp        		ReqOp                       = 1;
+
+    // ReqID is a client-assigned ID that allows the client and server to reference this ChReq in the future.
+    // Node.ReqComplete & ReqDiscarded is how the server signals when this request is considered closed/complete.
+                int32               ReqID                       = 2;
+
+    // FeedURI is the feed name to be opened.  
+    // A feed URI a case-sensitive, UTF8, POSIX-style pathname.
+                string              FeedURI                     = 10;
+
+    // StreamMode specifies if and where the server should start streaming feed entries.
+                StreamMode          StreamMode                  = 11;
+
+    // SeekEntryID tells the server where to start streaming.
+                string              SeekTID                		= 12;
+
+    // MaxEntriesToSend limits the number of entries the server will stream.
+    // If 0, then no limit is set.
+                int32               MaxEntriesToSend            = 13;
+
+    // SendEntryIDsOnly tells the server to only send EntryIDs (MsgData and MsgCodec will be nil) 
+                bool                SendEntryIDsOnly            = 14;
+
+    // NewEntry signals to create a new feed.
+    // If non-nil, FeedURI should be created and this entry should be the first entry appended to it.
+                Msg             	NewEntry                	= 20;
+
+}
+
+
+
+    // // VaultCtx provides context for SeekEntryID -- see StreamMode.
+    //             string              VaultCtx                    = 5;
+
+
+
+// MsgOp tells a holder of a Msg how to interpret its fields.
+// On general this is how a Vault communicates to a client.
+enum MsgOp {
+
 
     // RecvEntry delivers the next entry in a feed stream identified by FeedMsg.ReqID.
     RecvEntry               = 0;
@@ -53,40 +108,25 @@ enum FeedMsgOp {
     // This token can be used in a future OpenFeed request to resume reading from a feed (see StreamMode).
     RecvVaultCtx            = 5;
 
-
-    /*
-    ** 
-    ** 
-    ** CLIENT REQUESTS
-    ** 
-    ** 
-    **/
-
-    // CancelReq tells the server to cancel/stop/close the request identified by the given ReqID.
-    // Unlike all other client-to-server requests, the ReqID of this msg is not newly issued -- it refers to an existing request.
-    // In response, the server sends a ReqDiscarded message containing:
-    //      - ReqCanceled (if the matching ReqID was found and the associated op is now cancelled/closed)
-    //      - ReqNotFound (if no matching ReqID was found)
-    CancelReq               = 20;
-
-    // OpenFeed requests to open a given feed for reading or appending. 
-    // FeedMsg.MsgData is a serialized OpenFeedReq. 
-    // This ReqID of this msg used as FeedMsg.FeedID for subsequent requests that need to refer to an open feed (e.g. AppendEntry).
-    // On success, the server does not send a response and either begins streaming (if it was requested) and/or awaits requests for the opened feed. 
-    OpenFeed                = 30;
-
-    // AppendEntry requests to append MsgCodec & MsgData to the opened feed identified by FeedMsg.FeedID (the ReqID of the OpenFeed op).
-    // When this entry has been committed, a ReqComplete will be returned containing the newly assigned EntryID.
-    AppendEntry             = 35;
-
 }
 
 
-// FeedMsg is the generalized response object a server sends to the client as it processes each FeedReq sent by the client. 
-message FeedMsg {
+
+// Msg is the generalized response object that a vault sends to the client as it processes each FeedReq sent by the client. 
+message Msg {
+
+    /*
+    ** 
+    **
+    ** META FIELDS 
+    ** These fields are NOT content fields.  They are used for Vault service request/response flow or are meta info. 
+    ** They are zeroed before this Node is stored as a channel entry.
+    **
+    ** 
+    **/
 
     // MsOp tells the client how to interpret the fields in this FeedMsg.
-                FeedMsgOp           MsgOp                       = 1;
+                MsgOp           	Op                       	= 1;
                 
     // ReqID is set to value the originating FeedReq.ReqID was set to.
                 int32               ReqID                       = 2;
@@ -132,35 +172,6 @@ enum StreamMode {
     // AfterHead tells the server to resume after the latest entry in this feed.
     // VaultCtx and SeekEntryID are ignored.
     AfterHead               = 7;
-
-}
-
-
-message OpenFeedReq {
-
-    // FeedURI is the feed name to be opened.  
-    // A feed URI a case-sensitive, UTF8, POSIX-style pathname with no leading or trailing slashes.
-                string              FeedURI                     = 1;
-
-    // StreamMode specifies if and where the server should start streaming feed entries.
-                StreamMode          StreamMode                  = 3;
-
-    // VaultCtx provides context for SeekEntryID -- see StreamMode.
-                string              VaultCtx                    = 5;
-
-    // SeekEntryID tells the server where to start streaming.
-                int64               SeekEntryID                 = 6;
-
-    // MaxEntriesToSend limits the number of entries the server will stream.
-    // If 0, then no limit is set.
-                int32               MaxEntriesToSend            = 7;
-
-    // SendEntryIDsOnly tells the server to only send EntryIDs (MsgData and MsgCodec will be nil) 
-                bool                SendEntryIDsOnly            = 8;
-
-    // GenesisEntry signals to create a new feed.
-    // If non-nil, FeedURI should be created and this entry should be the first entry appended to it.
-                FeedMsg             GenesisEntry                = 10;
 
 }
 
