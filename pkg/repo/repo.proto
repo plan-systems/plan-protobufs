@@ -6,9 +6,9 @@ package repo;
 service RepoGrpc {
 
     // RepoServiceSession opens the specified channel at a given state and executes a stream of requests from the client.
-	// The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
-	// The beating heart of PLAN: channels, streams, information, security, trust, sessions.
-    rpc 		RepoServiceSession(stream ChReq)         		returns (stream Node);
+    // The return stream reports completion or status of active requests and remains open as long as the client stream remains open.
+    // The beating heart of PLAN: channels, streams, information, security, trust, sessions.
+    rpc         RepoServiceSession(stream ChReq)                 returns (stream Node);
 
 }
 
@@ -16,21 +16,21 @@ service RepoGrpc {
 enum Const {
     ConstDefs               = 0;
 
-	// TIDSz is the byte size of a TID, a hash with a leading embedded big endian binary time index.
-	// The purpose of a TID is that it can be sorted chronologically in order to facilitate 
-	// storage, searching, and syndication in large (real-world) TID blob repositories.
-	//
-	// Byte layout is designed so that TIDs are sortable by the embedded timestamp:
-	//    0:6   - Standard UTC timestamp in unix seconds (big endian)
-	//    6:8   - Timestamp fraction (big endian)
-	//    8:32  - Signature/hash
-	TIDSz                  	= 30;
+    // TIDSz is the byte size of a TID, a hash with a leading embedded big endian binary time index.
+    // The purpose of a TID is that it can be sorted chronologically in order to facilitate 
+    // storage, searching, and syndication in large-scale (real-world) TID blob repositories.
+    //
+    // Byte layout is designed so that TIDs are sortable by the embedded timestamp:
+    //    0:6   - Standard UTC timestamp in unix seconds (big endian)
+    //    6:8   - Timestamp fraction (big endian)
+    //    8:32  - Signature/hash
+    TIDSz                   = 30;
 
-	// TIDEncodedLen is the ASCII-compatible string length of a (binary) TID encoded into its base32 form.
-	TIDEncodedLen			= 48;
+    // TIDEncodedLen is the ASCII-compatible string length of a (binary) TID encoded into its base32 form.
+    TIDEncodedLen           = 48;
 
-	// TIDTimestampSz is the number of left-hand bytes in a TID reserved for a time index value.
-    TIDTimestampSz 			= 8;
+    // TIDTimestampSz is the number of left-hand bytes in a TID reserved for a time index value.
+    TIDTimestampSz          = 8;
 
     // DefaultGrpcServicePort is the TCP port the service RepoGrpc should run on by default.
     DefaultGrpcServicePort  = 5192;
@@ -72,7 +72,7 @@ message GetOp {
                 string              Keypath                     = 2;
                 KeypathScope        Scope                       = 3;
 
-	// MaintainSync causes the ChReq to remain open and receive state updates for qualifying keypaths via ChSyncSuspend/ChSyncResume 
+    // MaintainSync causes the ChReq to remain open and receive state updates for qualifying keypaths via ChSyncSuspend/ChSyncResume 
                 bool                MaintainSync                = 9;
 
 }
@@ -82,16 +82,16 @@ message GetOp {
 // In the corresponding reply ReqComplete message, Node.Attachment is set to the resulting TxID.
 message TxOp {
 
-	// ChStateURI expresses the channel URI that this op applies to.
-				ChStateURI        	ChStateURI                  = 3;
+    // ChStateURI expresses the channel URI that this op applies to.
+                ChStateURI          ChStateURI                  = 3;
 
     // ChannelGenesis creates a new channel in the domain name specified in ChReq.URI.
     // ChReq.Entries[] are entries that are written into the new channel (and are part of the genesis tx).
     // In the corresponding reply ReqComplete message, Node.Str is set to the URI of the newly created channel.
                 bool                ChannelGenesis              = 4;
 
-	// Entries are changes to be applied to the target channel.
-    repeated    Node              	Entries                     = 6;
+    // Entries are changes to be applied to the target channel.
+    repeated    Node                Entries                     = 6;
 
 }
 
@@ -108,12 +108,12 @@ message ChReq {
                 int32               ReqID                       = 2;
 
     // URI identifies the channel URI that this ChReq is requesting to access.
-	// Channel URIs take the form of "<DomainName>[/<ChID>[/<StateURI>]]".
-				string              ChURI                       = 3;
-				
-	// ChStateURI expresses the channel URI that this op applies to.
-	// If not set, it will be set by parsing ChReq.ChURI.
-				ChStateURI        	ChStateURI                  = 4;      
+    // Channel URIs take the form of "<DomainName>[/<ChID>[/<StateURI>]]".
+                string              ChURI                       = 3;
+                
+    // ChStateURI expresses the channel URI that this op applies to.
+    // If not set, it will be set by parsing ChReq.ChURI.
+                ChStateURI          ChStateURI                  = 4;      
 
     // ForkReqID specifies an open ChReqID to to use for state & credentials. 
     //            int32               ForkReqID                   = 4;
@@ -121,7 +121,7 @@ message ChReq {
     // When ReqOp == ChReqOp.Auto, one of these ops is to be executed.
     // It's an error to set more than one of these. 
                 GetOp               GetOp                       = 10;          
-                TxOp                TxOp                      	= 11;   
+                TxOp                TxOp                          = 11;   
 }
 
 
@@ -131,11 +131,11 @@ enum NodeOp {
     // ChEntry means this is a ch entry content node
     ChEntry                 = 0;
 
-	// ChEntryDelete removes the entry at the given path
-	ChEntryRemove         	= 2;
+    // ChEntryDelete removes the entry at the given path
+    ChEntryRemove           = 2;
 
-	// ChEntryRemoveAll removes the entry at the given path and all subs.
-	ChEntryRemoveAll     	= 3;
+    // ChEntryRemoveAll removes the entry at the given path and all subs.
+    ChEntryRemoveAll        = 3;
 
     // ReqComplete means the referenced request (via Node.ReqID) has successfully completed.
     // Other values in the Node are contextual based on request that was completed.
@@ -146,13 +146,13 @@ enum NodeOp {
     // As with ReqComplete, the referenced request is now complete, so the given ReqID is now available for (re)use.
     ReqDiscarded            = 5;
 
-	// ChSyncSuspend signals to the client that a state update is about to be sent (in the form of a sequence of entry ops).
-	// When all state change messages have been sent, the server sends ChSyncResume.
-    ChSyncSuspend         	= 8;
+    // ChSyncSuspend signals to the client that a state update is about to be sent (in the form of a sequence of entry ops).
+    // When all state change messages have been sent, the server sends ChSyncResume.
+    ChSyncSuspend           = 8;
 
-	// ChSyncResume signals that all pending state changes are have been sent (i.e. channel state is now synced)
-	// If Node.Str is set, it's set to a StateURI that represents the current channel state. 
-	ChSyncResume        	= 9;
+    // ChSyncResume signals that all pending state changes are have been sent (i.e. channel state is now synced)
+    // If Node.Str is set, it's set to a StateURI that represents the current channel state. 
+    ChSyncResume            = 9;
 
 }
 
@@ -172,7 +172,7 @@ message Node {
     **/
 
     // Op tells the client with this channel open that kind of Node this is.
-                NodeOp            	Op                          = 1;
+                NodeOp              Op                          = 1;
                 
     // ReqID references the originating ChReq that this Node is in response to.
                 int32               ReqID                       = 2;
@@ -191,60 +191,60 @@ message Node {
     ** 
     **/
 
-	// LastModified is a timestamp of when this entry was last altered (in UTC seconds << 16).
+    // LastModified is a timestamp of when this entry was last altered (in UTC seconds << 16).
     // This timestamp is updated when it is written to a channel.
                 int64               LastModified                = 10;
 
     // TypeID is a "multi-codec" style (POSIX-style type pathname) that self-describes this Node and the information within it. 
-				string              TypeID                      = 15;
+                string              TypeID                      = 15;
 
-	// GlyphURI is a loose analog to the conventional use of "icon" and refer to a unit-sized graphic or volume.
-	// Glyph URIs can allow the encoding of arbitrary parameters (such as color), allowing variants to be offered at no cost.
-	// A given glyph URI often has both a 2D ("sprite") and 3D object form and is chosen based on where it's instanced.
-				string              GlyphURI                  	= 20; 
+    // GlyphURI is a loose analog to the conventional use of "icon" and refer to a unit-sized graphic or volume.
+    // Glyph URIs can allow the encoding of arbitrary parameters (such as color), allowing variants to be offered at no cost.
+    // A given glyph URI often has both a 2D ("sprite") and 3D object form and is chosen based on where it's instanced.
+                string              GlyphURI                    = 20; 
 
-	// Label is a human readable descriptor for this item, with LabelFormat describing what format it's in.
-				string              Label                       = 22;
-				TextFormat			LabelFormat					= 23;
+    // Label is a human readable descriptor for this item, with LabelFormat describing what format it's in.
+                string              Label                       = 22;
+                TextFormat          LabelFormat                 = 23;
 
-	// Optional values that can express needed values in accordance of TypeID .
+    // Optional values that can express needed values in accordance of TypeID .
                 string              Str                         = 24; 
-				int64               Int                         = 25;
+                int64               Int                         = 25;
 
-	// Attachment is useful to attach any buffer, typically decoded based on Node.Op, Node.Keypath, or Node.TypeID.
+    // Attachment is useful to attach any buffer, typically decoded based on Node.Op, Node.Keypath, or Node.TypeID.
     // Max size is limited to 3MB.
-				bytes               Attachment                  = 30;
-				
-	// AssetURI specifies an asset URI (typically implicitly placed at this node's position, scale, and orientation.
-	// Asset URIs allow the encoding of arbitrary parameters (such as color), allowing variants to be offered at no cost.
-				string              AssetURI                  	= 35; 
+                bytes               Attachment                  = 30;
+                
+    // AssetURI specifies an asset URI (typically implicitly placed at this node's position, scale, and orientation.
+    // Asset URIs allow the encoding of arbitrary parameters (such as color), allowing variants to be offered at no cost.
+                string              AssetURI                    = 35; 
 
     // X1, X2, and X3 are coordinates or values expressed in any unit.
     // A channel client can later declare how to interpret these coordinates so that a channel server and provide indexed services.
     // Shoutout to the 3 domains that reflect all theoretical completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s).
     // Special thanks to Michael at Vsauce: https://www.youtube.com/watch?v=SrU9YDoXE88
-				double              X1                          = 41;
-				double              X2                          = 42;
-				double              X3                          = 43;
-	
-	// Scale1 to Scale3 express the scale of this Node. 
-	// If all three values are 0, they are all implicitly 1.
-	// If Scale2 or Scale3 == 0, then it is implicitly Scale1.
-				float              	Scale1                      = 51;
-				float              	Scale2                      = 52;
-				float              	Scale3                      = 53;
+                double              X1                          = 41;
+                double              X2                          = 42;
+                double              X3                          = 43;
+    
+    // Scale1 to Scale3 express the scale of this Node. 
+    // If all three values are 0, they are all implicitly 1.
+    // If Scale2 or Scale3 == 0, then it is implicitly Scale1.
+                float                  Scale1                   = 51;
+                float                  Scale2                   = 52;
+                float                  Scale3                   = 53;
 
-	// Rotate1 - Rotate3 the orientation of this Node using Euler angles.
-				float              	Rotate1                 	= 60;
-				float              	Rotate2                    	= 61;
-				float               Rotate3                   	= 62;
+    // Rotate1 - Rotate3 the orientation of this Node using Euler angles.
+                float                  Rotate1                  = 60;
+                float                  Rotate2                  = 61;
+                float               Rotate3                     = 62;
 
 }
 
 enum TextFormat {
-	PlainText			= 0;
-	RTF					= 1;
-	HTML				= 2;
+    PlainText               = 0;
+    RTF                     = 1;
+    HTML                    = 2;
 }
 
 
@@ -255,9 +255,9 @@ enum ErrCode {
     UnnamedErr                  = 5000;
     InternalErr                 = 5001;
     UnsupporteReqOp             = 5002;
-    ReqCanceled              	= 5003;
-	ShuttingDown                = 5004;
-	Disconnected				= 5005;
+    ReqCanceled                 = 5003;
+    ShuttingDown                = 5004;
+    Disconnected                = 5005;
 
     ReqIDNotFound               = 5010;
     InvalidKeypath              = 5020;
@@ -266,7 +266,7 @@ enum ErrCode {
 
     NothingToCommit             = 5030;
     CommitFailed                = 5031;
-	DomainNotFound				= 5032;
+    DomainNotFound              = 5032;
 
     CorruptChEntry              = 5040;
 
@@ -292,49 +292,49 @@ message ReqErr {
 // TODO -- this is a short-term workaround to get things running and it contents will be replaced with proper fields.
 message Tx {
 
-	// Derivative content (set to nil for serialization)
-				bytes				TID							= 1;
-				bytes				Hash						= 2;
+    // Derivative content (set to nil for serialization)
+                bytes               TID                         = 1;
+                bytes               Hash                        = 2;
 
-	// Content
-				TxOp                TxOp                        = 10; 
-				      
+    // Content
+                TxOp                TxOp                        = 10; 
+                      
 }
 
 
 // ChStateURI fully specifies a channel URI at a given state.
 message ChStateURI {
 
-				// DomainName specifies the parent community/context name of the given channel ID.  Domain names are how 
-				// channel syndication properties, storage quotas, and prioritization are possible at the vault level.  
-				string              DomainName                	= 1;
+                // DomainName specifies the parent community/context name of the given channel ID.  Domain names are how 
+                // channel syndication properties, storage quotas, and prioritization are possible at the vault level.  
+                string              DomainName                  = 1;
 
-				// ChID_TID specifies a channel's TID for a given domain name.
-				// If this is not set, then the channel ID is considered to be non-binary and is contained in ChID.
-				bytes               ChID_TID                	= 2;
+                // ChID_TID specifies a channel's TID for a given domain name.
+                // If this is not set, then the channel ID is considered to be non-binary and is contained in ChID.
+                bytes               ChID_TID                    = 2;
 
-				// ChID is a UTF8 string name of this channel.
-				// IF both ChID and ChID_TID are set, ChID is assumed to contain the base32 representation of ChID_TID.
-				string              ChID             			= 3;
+                // ChID is a UTF8 string name of this channel.
+                // IF both ChID and ChID_TID are set, ChID is assumed to contain the base32 representation of ChID_TID.
+                string              ChID                        = 3;
 
-				// StateURI is a token that expresses a specific channel state.
-				// If this is not set, the latest state of the channel is implied.
-				// By convention this is a POSIX-style pathname in the form "<StateContextID>[/<SubStateID>]*"
-				string				StateURI					= 4;
+                // StateURI is a token that expresses a specific channel state.
+                // If this is not set, the latest state of the channel is implied.
+                // By convention this is a POSIX-style pathname in the form "<StateContextID>[/<SubStateID>]*"
+                string              StateURI                    = 4;
 }
 
 
 // RawTx reflects a Tx that has been is packed and sealed.
 message RawTx {
 
-	// TID identifies this Txn (and is a hash or signature for contained Tx)
-                bytes               TID                    		= 1;
+    // TID identifies this Txn (and is a hash or signature for contained Tx)
+                bytes               TID                         = 1;
 
    // TxnStatus information about the associated txn
-   				TxnStatus          	TxnStatus                  	= 2;
+                TxnStatus           TxnStatus                   = 2;
 
-                bytes               Header             			= 10;
-                bytes               Body                 		= 11;
+                bytes               Header                      = 10;
+                bytes               Body                        = 11;
 }
 
 
@@ -342,29 +342,29 @@ message RawTx {
 enum TxnStatus {
 
     // New means tx is yet to be committed to storage
-	New                         = 0;
-	
+    New                         = 0;
+    
 }
 
 // OrgFlags is for minor UX adaptations in default naming, nomenclature, and phraseology.
 enum OrgFlags {
-	IsCommunity					= 0;
+    IsCommunity                 = 0;
 
-	IsLegalOrganization			= 0x0001;
-	IsCompany					= 0x0002;
-	IsFederation				= 0x0004;
-	IsPersonal					= 0x0010;
+    IsLegalOrg                  = 0x0001;
+    IsCompany                   = 0x0002;
+    IsFederation                = 0x0004;
+    IsPersonal                  = 0x0010;
 }
 
 
 message OrgInfo {
 
-				string				CommonName					= 1;
-				string				FormalName					= 2;
-				string				DomainName					= 3;
+                string                CommonName                = 1;
+                string                FormalName                = 2;
+    repeated    string                DomainNames               = 3;
 
-				OrgFlags			OrgFlags					= 10;
-				string				GenesisTID 					= 11;
+                OrgFlags              OrgFlags                  = 10;
+                string                GenesisTID                = 11;
 
 }
 

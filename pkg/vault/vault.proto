@@ -8,19 +8,19 @@ service VaultGrpc {
     // VaultSession offers a client service to a vault's feed repo.
     // The client submits requests to be executed, and the vault streams response msgs.
     // The session stream remains open as long as the client maintains its open.
-    rpc 		VaultSession(stream FeedReq)       	returns (stream Msg);
+    rpc         VaultSession(stream FeedReq)           returns (stream Msg);
 
 }
 
 
 enum Const {
-	ConstDefs          		= 0;
-	
-	// EntryIDSz is the expected byte size of an EntryID
-	EntryIDSz				= 30;
+    ConstDefs                = 0;
+    
+    // EntryIDSz is the expected byte size of an EntryID
+    EntryIDSz                = 30;
 
     // DefaultGrpcServicePort is the TCP port number that the service VaultGrpc should run on by default.
-    DefaultGrpcServicePort	= 5190;
+    DefaultGrpcServicePort  = 5190;
 }
 
 
@@ -30,11 +30,11 @@ enum ReqOp {
 
     // AppendEntry requests that FeedReq.NewEntry is appended to the given stream URI.
     // When this entry has been committed, a ReqComplete will be returned.
-	AppendEntry             = 0;
+    AppendEntry             = 0;
 
     // ChannelGenesis creates a new channel specified in FeedReq.FeedURI
     // FeedReq.NewEntry is written into the new channel (and is the channel genesis entry).
-	ChannelGenesis         	= 1;
+    ChannelGenesis          = 1;
 
     // CancelReq tells the server to cancel/stop/close the request identified by the given ReqID.
     // Unlike all other client-to-server requests, the ReqID of this msg is not newly issued -- it refers to an existing request.
@@ -44,7 +44,7 @@ enum ReqOp {
     // On success, the server does not send a response and either begins streaming (if it was requested) and/or awaits requests for channel feed. 
     OpenFeed                = 30;
 
-	
+    
 
 }
 
@@ -52,18 +52,18 @@ enum ReqOp {
 message FeedReq {
 
     // ReqOp requests that the given op to be execute on ChReq.Entries
-                ReqOp        		ReqOp                       = 1;
+                ReqOp               ReqOp                       = 1;
 
     // ReqID is a client-assigned ID that allows the client and server to reference this ChReq in the future.
     // Node.ReqComplete & ReqDiscarded is how the server signals when this request is considered closed/complete.
                 int32               ReqID                       = 2;
 
-	// OpenFeed opens a feed for access.
-				OpenFeedReq			OpenFeed					= 10;			
+    // OpenFeed opens a feed for access.
+                OpenFeedReq         OpenFeed                    = 10;            
 
     // NewEntry is contains an entry to be appended to this feed.
     // If non-nil, FeedURI should be created and this entry should be the first entry appended to it.
-                Msg             	NewEntry                	= 20;
+                Msg                 NewEntry                    = 20;
 
 }
 
@@ -78,31 +78,32 @@ message OpenFeedReq {
                 StreamMode          StreamMode                  = 11;
 
     // SeekEntryID tells the server where to start streaming.
-                bytes              	SeekEntryID                	= 12;
+                bytes               SeekEntryID                 = 12;
 
     // MaxEntriesToSend limits the number of entries the server will stream.
     // If 0, then no limit is set.
                 int32               MaxEntriesToSend            = 13;
 
     // SendEntryIDsOnly tells the server to only send EntryIDs (MsgData and MsgCodec will be nil) 
-				bool                SendEntryIDsOnly            = 14;
-				
+                bool                SendEntryIDsOnly            = 14;
+                
 }
 
 
 message EntryHeader {
 
-	// EntryID names the entry being posted and is a binary ID based on a hash of the entry body.  
-	// The vault can safely assume that no two entries will ever share the same EntryID.
-	// The expected byte size of this ID (and all other entry IDs is Const.EntryIDSz)
-				bytes               EntryID              		= 1;
+    // EntryID names the entry being posted and is a binary ID based on a hash of the entry body.  
+    // The vault can safely assume that no two entries will ever share the same EntryID.
+    // The expected byte size of this ID (and all other entry IDs is Const.EntryIDSz)
+                bytes               EntryID                     = 1;
 
-	// ParentID names a parent of this feed entry ID and intended to be an aid for a vault to help find and recover missing entries in a feed.
-				bytes               ParentID              		= 10;
+    // ParentID names a parent of this entry and intended to be an aid for a vault to help find and recover missing entries in a feed.
+                bytes               ParentID                    = 10;
 
-	// EntryCodec is a POSIX-style pathname that describes the encoding of this entry's data body.
-	// It is not needed/used by the vault (with the exception that vaults may insert entries into a feed stream to meta-communicate).
-				string             	EntryCodec              	= 11;
+    // EntryCodec is a POSIX-style pathname that describes the encoding of this entry's data body.
+    // It is not needed/used by the vault (with the exception that vaults may insert entries into a feed stream to meta-communicate).
+    // Unrecognized codec types should be ignored but passed on as applicable.
+                string              EntryCodec                  = 11;
 
 }
 
@@ -136,16 +137,16 @@ enum MsgOp {
 message Msg {
 
     // MsOp tells the client how to interpret the fields in this FeedMsg.
-                MsgOp           	Op                       	= 1;
+                MsgOp               Op                          = 1;
                 
     // ReqID is set to value the originating FeedReq.ReqID was set to.
                 int32               ReqID                       = 2;
 
     // EntryHeader, if non-nil, provides info about the entry contained in Msg.Body.
-				EntryHeader       	EntryHeader                	= 8;
-				
-	// Body is typically an entry's data body, but may be other forms of serialized data depending on Msg.Op
-				bytes				Body						= 10;
+                EntryHeader         EntryHeader                 = 8;
+                
+    // Body is typically an entry's data body, but may be other forms of serialized data depending on Msg.Op
+                bytes               Body                        = 10;
 
 }
 
