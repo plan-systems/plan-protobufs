@@ -60,8 +60,8 @@ enum KeypathScope {
     NoScope                 = 0;
 
     EntryAtKeypath          = 0x01;
-    ChildEntries            = 0x02;
-    AllSubEntries           = 0x06;
+    Shallow       			= 0x02;
+    ShallowAndDeep	       	= 0x04;
 }
 
 
@@ -191,9 +191,12 @@ message Node {
     ** 
     **/
 
-    // LastModified is a timestamp of when this entry was last altered (in UTC seconds << 16).
-    // This timestamp is updated when it is written to a channel.
-                int64               LastModified                = 10;
+	// RevID is the timestamp when this entry was submitted to the host channel in UTC seconds (where one sec is 2^16 ticks)
+				int64               RevID		                = 10;
+				
+	// ParentRevID identifies the RevID of the Node instance that this node is replacing.
+	// If this is 0, a Node at this keypath did not exist when this Node was submitted. 
+				int64				ParentRevID					= 11;
 
     // TypeID is a "multi-codec" style (POSIX-style type pathname) that self-describes this Node and the information within it. 
                 string              TypeID                      = 15;
@@ -230,13 +233,13 @@ message Node {
     // Scale1 to Scale3 express the scale of this Node. 
     // If all three values are 0, they are all implicitly 1.
     // If Scale2 or Scale3 == 0, then it is implicitly Scale1.
-                float                  Scale1                   = 51;
-                float                  Scale2                   = 52;
-                float                  Scale3                   = 53;
+                float               Scale1                      = 51;
+                float               Scale2                      = 52;
+                float               Scale3                      = 53;
 
     // Rotate1 - Rotate3 the orientation of this Node using Euler angles.
-                float                  Rotate1                  = 60;
-                float                  Rotate2                  = 61;
+                float               Rotate1                     = 60;
+                float               Rotate2                     = 61;
                 float               Rotate3                     = 62;
 
 }
@@ -359,12 +362,12 @@ enum OrgFlags {
 
 message OrgInfo {
 
-                string                CommonName                = 1;
-                string                FormalName                = 2;
-    repeated    string                DomainNames               = 3;
+                string              CommonName                  = 1;
+                string              FormalName                  = 2;
+    repeated    string              DomainNames                 = 3;
 
-                OrgFlags              OrgFlags                  = 10;
-                string                GenesisTID                = 11;
+                OrgFlags            OrgFlags                    = 10;
+                string              GenesisTID                  = 11;
 
 }
 
