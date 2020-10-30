@@ -156,9 +156,9 @@ enum NodeOp {
 
 }
 
-
-
 // Node is the generalized response object a server sends to the client as it processes each ChReq sent by the client. 
+// Node is also the standard "atomic" unit of information in a channel.
+// A repo channel is a key-value trie data structure where Node.Keypath maps to a Node body.
 message Node {
 
     /*
