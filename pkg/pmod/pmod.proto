@@ -18,13 +18,16 @@ enum AssetFlags {
 	// IsIcon means this is a scaled-down, representative 2D sprite intended to represent the primary asset.
 	IsIcon  						= 0x0020;
 
-	IsPlacable 						= 0x0040;
+	// IsGlyph means this asset is a 3D object that is more of a token or 3D icon than it is a static or fixed-sized object.
+	// They are representative of a conceptual object or node (as opposed to static aspect of reality itself).
+	IsGlyph 						= 0x0040;
+
+	// IsStruct means this asset behaves like terrain, has a preset size/scale, and is to be considered a constituent part of a space or scene.
+	// e.g.  a building, a terrain formation, a patch of trees, an art installation
+	IsStruct						= 0x0100;
+
+	// IsSkybox means this is a prefab containing a Skybox component.
 	IsSkybox						= 0x0080;
-	IsSpace							= 0x0100;
-
-//	IsStructure   					= 0x0010;
-//	IsArea   						= 0x0080;
-
 
 }
 
@@ -35,7 +38,20 @@ message AssetEntry {
 				AssetFlags			AssetFlags					= 1;
 				string				URI		     				= 2;
 				string				Label 						= 3;
-}
+
+	// CenterX and CenterZ specify the positional center of this asset (and are typically 0).
+	// CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
+	// Y is considered to be the *vertical* (up) direction and by convention rest on the plane y=0.
+				float				CenterX						= 5;
+				float				CenterY						= 6;
+				float				CenterZ						= 7;
+
+	// Extents specify the extents as distance from the center to the extent of the asset on each axis.
+				float				ExtentsX					= 10;
+				float				ExtentsY					= 11;
+				float				ExtentsZ					= 12;
+
+	}
 
 
 message BundleManifest {
@@ -72,17 +88,18 @@ message ModuleManifest {
 	// e.g. 
 	//    "plan-systems.org"
 	//    "themushroom.farm" 
-				string             	DomainName              	= 1;
+	//    "the-smiths.family" 
+				string             	ModuleDomain           		= 1;
 
-	// ModuleName is a POSIX-style pathname of this module.
+	// ModuleName names this module (for the given domain name)
 	//
 	// e.g. 
-	//    "plan-systems.org/plan-app"
-	//    "plan-systems.org/about-plan-systems"
-	//    "plan-systems.org/welcome-to-plan"
-	//    "themushroom.farm/common"     
-	//    "themushroom.farm/mycology-101"     
-	//    "themushroom.farm/mycology-201"     
+	//    "plan-app"
+	//    "about-plan-systems"
+	//    "welcome-to-plan"
+	//    "common"     
+	//    "mycology-101"     
+	//    "mycology-201"     
 				string             	ModuleName              	= 2;
 
 				string				ModuleDesc					= 5;
