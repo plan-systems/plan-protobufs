@@ -23,7 +23,7 @@ enum Const {
     // Byte layout is designed so that TIDs are sortable by the embedded timestamp:
     //    0:6   - Standard UTC timestamp in unix seconds (big endian)
     //    6:8   - Timestamp fraction (big endian)
-    //    8:32  - Signature/hash
+    //    8:30  - Signature/hash
     TIDSz                   = 30;
 
     // TIDEncodedLen is the ASCII-compatible string length of a (binary) TID encoded into its base32 form.
@@ -60,8 +60,8 @@ enum KeypathScope {
     NoScope                 = 0;
 
     EntryAtKeypath          = 0x01;
-    Shallow       			= 0x02;
-    ShallowAndDeep	       	= 0x04;
+    Shallow                 = 0x02;
+    ShallowAndDeep          = 0x04;
 }
 
 
@@ -115,13 +115,10 @@ message ChReq {
     // If not set, it will be set by parsing ChReq.ChURI.
                 ChStateURI          ChStateURI                  = 4;      
 
-    // ForkReqID specifies an open ChReqID to to use for state & credentials. 
-    //            int32               ForkReqID                   = 4;
-
     // When ReqOp == ChReqOp.Auto, one of these ops is to be executed.
     // It's an error to set more than one of these. 
                 GetOp               GetOp                       = 10;          
-                TxOp                TxOp                          = 11;   
+                TxOp                TxOp                        = 11;   
 }
 
 
@@ -191,12 +188,12 @@ message Node {
     ** 
     **/
 
-	// RevID is the timestamp when this entry was submitted to the host channel in UTC seconds (where one sec is 2^16 ticks)
-				int64               RevID		                = 10;
-				
-	// ParentRevID identifies the RevID of the Node instance that this node is replacing.
-	// If this is 0, a Node at this keypath did not exist when this Node was submitted. 
-				int64				ParentRevID					= 11;
+    // RevID is the timestamp when this entry was submitted to the host channel in UTC seconds (where one sec is 2^16 ticks)
+                int64               RevID                       = 10;
+                
+    // ParentRevID identifies the RevID of the Node instance that this node is replacing.
+    // If this is 0, a Node at this keypath did not exist when this Node was submitted. 
+                int64               ParentRevID                 = 11;
 
     // TypeID is a "multi-codec" style (POSIX-style type pathname) that self-describes this Node and the information within it. 
                 string              TypeID                      = 15;
@@ -207,8 +204,8 @@ message Node {
                 string              GlyphURI                    = 20; 
 
     // Label is a human readable descriptor for this item, with LabelFormat describing what format it's in.
-                string              Label                       = 22;
-                TextFormat          LabelFormat                 = 23;
+                string              Text                        = 22;
+                TextFormat          TextFormat                  = 23;
 
     // Optional values that can express needed values in accordance of TypeID .
                 string              Str                         = 24; 
