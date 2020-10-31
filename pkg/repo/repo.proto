@@ -203,7 +203,7 @@ message Node {
     // A given glyph URI often has both a 2D ("sprite") and 3D object form and is chosen based on where it's instanced.
                 string              GlyphURI                    = 20; 
 
-    // Label is a human readable descriptor for this item, with LabelFormat describing what format it's in.
+    // Text is a human readable descriptor for this item, with TextFormat describing what format it's in.
                 string              Text                        = 22;
                 TextFormat          TextFormat                  = 23;
 
