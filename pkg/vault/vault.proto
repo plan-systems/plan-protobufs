@@ -182,6 +182,12 @@ enum StreamMode {
     // VaultCtx and SeekEntryID are ignored.
     AfterHead               = 7;
 
+    // FromIndex tells the server to treat stream entries in order of
+    // arrival at this vault peer, rather than ordered by
+    // EntryID. This allows clients to catch up to entries received
+    // while they were offline. The SeekEntryID is treated as the
+    // index.
+    FromIndex               = 9;
 }
 
 
