@@ -150,6 +150,14 @@ message Msg {
     // Body is typically an entry's data body, but may be other forms of serialized data depending on Msg.Op
                 bytes               Body                        = 10;
 
+    // Status provides status information about the request beyond
+    // what is provided in thenMsgOp
+                ReqStatus           Status                      = 20;
+
+    // Err provides details about error conditions.
+                ReqErr              Err                         = 30;
+
+
 }
 
 
