@@ -125,31 +125,31 @@ message ChReq {
 // NodeOp is a collection of NodeOp values that express how a Node is to be interpreted.
 enum NodeOp {
     
-    // ChEntry means this is a ch entry content node
-    ChEntry                 = 0;
+    // NodeUpdate means this Node should update/overwrite the Node that is already at the given Keypath. 
+    NodeUpdate              = 0;
 
-    // ChEntryDelete removes the entry at the given path
-    ChEntryRemove           = 2;
+    // NodeRemove means the Node at the given Keypath path should be deleted/removed.
+    NodeRemove              = 2;
 
-    // ChEntryRemoveAll removes the entry at the given path and all subs.
-    ChEntryRemoveAll        = 3;
+    // NodeRemoveAll is similar to NodeRemove, but includes all sub keypaths.
+    NodeRemoveAll           = 3;
 
     // ReqComplete means the referenced request (via Node.ReqID) has successfully completed.
     // Other values in the Node are contextual based on request that was completed.
-    ReqComplete             = 4;
+    ReqComplete             = 10;
 
     // ReqDiscarded means the referenced request failed and/or has been canceled.
     // If Node.Attachment != nil, then it is a serialized ReqErr describing why it was discarded.
     // As with ReqComplete, the referenced request is now complete, so the given ReqID is now available for (re)use.
-    ReqDiscarded            = 5;
+    ReqDiscarded            = 11;
 
     // ChSyncSuspend signals to the client that a state update is about to be sent (in the form of a sequence of entry ops).
     // When all state change messages have been sent, the server sends ChSyncResume.
-    ChSyncSuspend           = 8;
+    ChSyncSuspend           = 20;
 
     // ChSyncResume signals that all pending state changes are have been sent (i.e. channel state is now synced)
     // If Node.Str is set, it's set to a StateURI that represents the current channel state. 
-    ChSyncResume            = 9;
+    ChSyncResume            = 21;
 
 }
 
