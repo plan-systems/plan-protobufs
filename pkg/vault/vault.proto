@@ -241,6 +241,8 @@ enum ErrCode {
 
     UnrecognizedVaultCtx        = 5030;
 
+    InvalidRequest              = 5040;
+    DatabaseError               = 6000;
 }
 
 // ReqErr wraps any error and is typically used in conjunction with FeedMsgOp.ReqDiscarded
