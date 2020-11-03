@@ -6,67 +6,67 @@ package pmod;
 
 // AssetFlags describes what kind of asset this is.
 enum AssetFlags {
-	NoFlags  						= 0;
+    NoFlags                         = 0;
 
-	IsTex2D							= 0x0001;
-	IsSprite						= 0x0002;
-	IsMaterial						= 0x0004;
+    IsTex2D                         = 0x0001;
+    IsSprite                        = 0x0002;
+    IsMaterial                      = 0x0004;
 
-	// HasIcon means that this Asset includes an icon with the same name (and has IsIcon set),
-	HasIcon							= 0x0010;
+    // HasIcon means that this Asset includes an icon with the same name (and has IsIcon set),
+    HasIcon                         = 0x0010;
 
-	// IsIcon means this is a scaled-down, representative 2D sprite intended to represent the primary asset.
-	IsIcon  						= 0x0020;
+    // IsIcon means this is a scaled-down, representative 2D sprite intended to represent the primary asset.
+    IsIcon                          = 0x0020;
 
-	// IsGlyph means this asset is a 3D object that is more of a token or 3D icon than it is a static or fixed-sized object.
-	// They are representative of a conceptual object or node (as opposed to static aspect of reality itself).
-	IsGlyph 						= 0x0040;
+    // IsGlyph means this asset is a 3D object that is more of a token or 3D icon than it is a static or fixed-sized object.
+    // They are representative of a conceptual object or node (as opposed to static aspect of reality itself).
+    IsGlyph                         = 0x0040;
 
-	// IsStruct means this asset behaves like terrain, has a preset size/scale, and is to be considered a constituent part of a space or scene.
-	// e.g.  a building, a terrain formation, a patch of trees, an art installation
-	IsStruct						= 0x0100;
+    // IsStruct means this asset behaves like terrain, has a preset size/scale, and is to be considered a constituent part of a space or scene.
+    // e.g.  a building, a terrain formation, a patch of trees, an art installation
+    IsStruct                        = 0x0100;
 
-	// IsSkybox means this is a prefab containing a Skybox component.
-	IsSkybox						= 0x0080;
+    // IsSkybox means this is a prefab containing a Skybox component.
+    IsSkybox                        = 0x0080;
 
 }
 
 
 message AssetEntry {
 
-	// Flags specifies properties about this asset.
-				AssetFlags			AssetFlags					= 1;
-				string				URI		     				= 2;
-				string				Label 						= 3;
+    // Flags specifies properties about this asset.
+                AssetFlags          AssetFlags                  = 1;
+                string              URI                         = 2;
+                string              Label                       = 3;
 
-	// CenterX and CenterZ specify the positional center of this asset (and are typically 0).
-	// CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
-	// Y is considered to be the *vertical* (up) direction and by convention rest on the plane y=0.
-				float				CenterX						= 5;
-				float				CenterY						= 6;
-				float				CenterZ						= 7;
+    // CenterX and CenterZ specify the positional center of this asset (and are typically 0).
+    // CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
+    // Y is considered to be the *vertical* (up) direction and by convention rest on the plane y=0.
+                float               CenterX                     = 5;
+                float               CenterY                     = 6;
+                float               CenterZ                     = 7;
 
-	// Extents specify the extents as distance from the center to the extent of the asset on each axis.
-				float				ExtentsX					= 10;
-				float				ExtentsY					= 11;
-				float				ExtentsZ					= 12;
+    // Extents specify the extents as distance from the center to the extent of the asset on each axis.
+                float               ExtentsX                    = 10;
+                float               ExtentsY                    = 11;
+                float               ExtentsZ                    = 12;
 
-	}
+    }
 
 
 message BundleManifest {
 
-				string             	ParentModule        		= 1;
+                string              ParentModule                = 1;
 
-	// BundlePublicName is how the outside world names this bundle.
-				string             	BundlePublicName        	= 2;
+    // BundlePublicName is how the outside world names this bundle.
+                string              BundlePublicName            = 2;
 
-	// BundleBuildName is how this bundle is internally named.
-				string             	BundleBuildName        		= 3;
+    // BundleBuildName is how this bundle is internally named.
+                string              BundleBuildName             = 3;
 
-	repeated 	AssetEntry			Assets 						= 10;
+    repeated     AssetEntry         Assets                      = 10;
 
-				bool				LoadAllHint					= 20;
+                bool                LoadAllHint                 = 20;
 
 }
 
@@ -83,30 +83,31 @@ message BundleManifest {
 message ModuleManifest {
 
 
-	// DomainName is the root name of a ModuleName
-	//
-	// e.g. 
-	//    "plan-systems.org"
-	//    "themushroom.farm" 
-	//    "the-smiths.family" 
-				string             	ModuleDomain           		= 1;
+    // DomainName is the root name of a ModuleName
+    //
+    // e.g. 
+    //    "plan-systems.org"
+    //    "themushroom.farm" 
+    //    "the-smiths.family" 
+                string              ModuleDomain                = 1;
 
-	// ModuleName names this module (for the given domain name)
-	//
-	// e.g. 
-	//    "plan-app"
-	//    "about-plan-systems"
-	//    "welcome-to-plan"
-	//    "common"     
-	//    "mycology-101"     
-	//    "mycology-201"     
-				string             	ModuleName              	= 2;
+    // ModuleName names this module (for the given domain name)
+    //
+    // e.g. 
+    //    "plan-app"
+    //    "about-plan-systems"
+    //    "welcome-to-plan"
+    //    "common"     
+    //    "mycology-101"     
+    //    "mycology-201"     
+                string              ModuleName                  = 2;
 
-				string				ModuleDesc					= 5;
+    // ModuleDesc describes this module in a brief phrase
+                string              ModuleDesc                  = 5;
 
-	// BrowserBundle is the name of the bundle containing assets and info used to browse this module.
-				string				BrowserBundle				= 8;
+    // BrowserBundle is the name of the bundle containing assets and info used to browse this module.
+                string              BrowserBundle               = 8;
 
-	repeated 	BundleManifest    	Bundles                  	= 10;
+    repeated     BundleManifest     Bundles                     = 10;
 
 }
