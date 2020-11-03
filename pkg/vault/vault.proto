@@ -105,6 +105,8 @@ message EntryHeader {
     // Unrecognized codec types should be ignored but passed on as applicable.
                 string              EntryCodec                  = 11;
 
+    // FeedURI tells the client what Channel the Entry is associated with.
+                string              FeedURI                     = 15;
 }
 
 
