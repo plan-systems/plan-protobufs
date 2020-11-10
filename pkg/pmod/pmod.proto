@@ -62,9 +62,10 @@ message BundleManifest {
                 string              BundlePublicName            = 2;
 
     // BundleBuildName is how this bundle is internally named.
+	// This corresponds to the asset bundle's file name and is normalized to lower case invariant.
                 string              BundleBuildName             = 3;
 
-    repeated     AssetEntry         Assets                      = 10;
+    repeated    AssetEntry          Assets                      = 10;
 
                 bool                LoadAllHint                 = 20;
 
@@ -75,7 +76,7 @@ message BundleManifest {
 //
 // A reference to a PLAN asset is via an asset path ID ("PID").
 // An asset PID is a case sensitive POSIX-style pathname having the form:
-//     assetPID := "modulePID/bundleName[.revisionID]/assetName"
+//     assetPID := "modulePID/bundlePublicName[.revisionID]/assetName"
 //
 // where:
 //     modulePID := "domainName/moduleName"
