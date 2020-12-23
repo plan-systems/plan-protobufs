@@ -28,13 +28,15 @@ enum Const {
 // ReqOp is a code describing the purpose and format of the vault Req that it resides in.
 enum ReqOp {
 
+    InvalidEntry            = 0;
+
     // AppendEntry requests that FeedReq.NewEntry is appended to the given stream URI.
     // When this entry has been committed, a ReqComplete will be returned.
-    AppendEntry             = 0;
+    AppendEntry             = 1;
 
     // ChannelGenesis creates a new channel specified in FeedReq.FeedURI
     // FeedReq.NewEntry is written into the new channel (and is the channel genesis entry).
-    ChannelGenesis          = 1;
+    ChannelGenesis          = 2;
 
     // CancelReq tells the server to cancel/stop/close the request identified by the given ReqID.
     // Unlike all other client-to-server requests, the ReqID of this msg is not newly issued -- it refers to an existing request.
@@ -96,6 +98,9 @@ message EntryHeader {
     // The vault can safely assume that no two entries will ever share the same EntryID.
     // The expected byte size of this ID (and all other entry IDs is Const.EntryIDSz)
                 bytes               EntryID                     = 1;
+
+    // MemberID tells us what key signed the entry.
+                bytes               MemberID                    = 2;
 
     // ParentID names a parent of this entry and intended to be an aid for a vault to help find and recover missing entries in a feed.
                 bytes               ParentID                    = 10;
@@ -264,4 +269,31 @@ enum ErrCode {
 message ReqErr {
                 ErrCode             Code                        = 1;
                 string              Msg                         = 2;
+}
+
+// Peer is the body of a message sent over the discovery Channel for
+// sharing peer network addresses and public keys.
+message Peer {
+
+        // Op tells us what to do with this
+                      PeerUpdateOp   Op                    = 1;
+
+        // ID is the Peer ID
+                      string         ID                    = 2;
+
+        // Key is the Peer public key
+                      bytes          Key                   = 3;
+
+        // multiaddrs is the list of network multiaddresses for this peer
+        repeated      bytes          Multiaddrs            = 5;
+}
+
+
+// PeerUpdateOp tells us what to do with the Peer we just got. Note
+// that we only remove a peer ID when it's gone permanently, not when
+// it's temporarily unavailable or has moved to a new multiaddr.
+enum PeerUpdateOp {
+        Nothing                 = 0;  // stored state representation
+        Upsert                  = 10;
+        RemovePermanently       = 20;
 }
