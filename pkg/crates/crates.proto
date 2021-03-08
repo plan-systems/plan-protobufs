@@ -1,7 +1,7 @@
 syntax = "proto3";
-package pmod;
+package crates;
 
-
+option csharp_namespace = "PlanSDK.Crates";
 
 
 // AssetFlags describes what kind of asset this is.
@@ -11,25 +11,27 @@ enum AssetFlags {
     IsTex2D                         = 0x0001;
     IsSprite                        = 0x0002;
     IsMaterial                      = 0x0004;
+    IsPlacable                      = 0x0008;
 
     // HasIcon means that this Asset includes an icon with the same name (and has IsIcon set),
-    HasIcon                         = 0x0010;
+    HasIcon                         = 0x0100;
 
-    // IsIcon means this is a scaled-down, representative 2D sprite intended to represent the primary asset.
-    IsIcon                          = 0x0020;
+    // IsPrivate means this item is not intended for general use and is not normally visible. 
+    IsPrivate                       = 0x0200;
 
-    // IsGlyph means this asset is a 3D object that is more of a token or 3D icon than it is a static or fixed-sized object.
-    // They are representative of a conceptual object or node (as opposed to static aspect of reality itself).
-    IsGlyph                         = 0x0040;
+    // IsSkybox means this is a transform containing a Skybox component.
+    IsSkybox                        = 0x0400;
+    
+    // AutoScale means this asset should be placed with auto scale enabled by default.
+    AutoScale                       = 0x0800;
 
-    // IsStruct means this asset behaves like terrain, has a preset size/scale, and is to be considered a constituent part of a space or scene.
-    // e.g.  a building, a terrain formation, a patch of trees, an art installation
-    IsStruct                        = 0x0100;
-
-    // IsSkybox means this is a prefab containing a Skybox component.
-    IsSkybox                        = 0x0080;
+    // IsSurface means this asset behaves like terrain and/or should be considered a constituent part of a scene.
+    // These objects should be opaque and have colliders attached to them
+    // e.g.  a building, a terrain formation, a wall
+    IsSurface                       = 0x1000;
 
 }
+
 
 
 message AssetEntry {
@@ -38,6 +40,7 @@ message AssetEntry {
                 AssetFlags          AssetFlags                  = 1;
                 string              URI                         = 2;
                 string              Label                       = 3;
+                string              UUID                        = 4;
 
     // CenterX and CenterZ specify the positional center of this asset (and are typically 0).
     // CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
@@ -56,7 +59,7 @@ message AssetEntry {
 
 message BundleManifest {
 
-                string              ParentModule                = 1;
+                string              ParentCrate                 = 1;
 
     // BundlePublicName is how the outside world names this bundle.
                 string              BundlePublicName            = 2;
@@ -71,28 +74,32 @@ message BundleManifest {
 
 }
 
-// ModuleManifest is the top-level manifest/catalog for a PLAN module.  It contains catalog and type info
-// that PLAN loads at runtime to know what's inside binary asset bundles without having to open and access them.
+// CrateManifest is the top-level manifest/catalog for a PLAN asset module called a "crate".  
+// Is contains catalog and type info that PLAN loads at runtime to know what's inside binary asset bundles without having to load them.
 //
 // A reference to a PLAN asset is via an asset path ID ("PID").
 // An asset PID is a case sensitive POSIX-style pathname having the form:
-//     assetPID := "modulePID/bundlePublicName[.revisionID]/assetName"
+//     assetPID := "cratePID/bundlePublicName[.revisionID]/assetName"
 //
 // where:
-//     modulePID := "domainName/moduleName"
+//     cratePID := "homeDomainName/crateID"
 //
-message ModuleManifest {
+message CrateManifest {
 
 
-    // DomainName is the root name of a ModuleName
+    // DomainName identifies the publisher of this asset crate
     //
     // e.g. 
     //    "plan-systems.org"
     //    "themushroom.farm" 
     //    "the-smiths.family" 
-                string              ModuleDomain                = 1;
+                string              HomeDomain                  = 1;
 
-    // ModuleName names this module (for the given domain name)
+    // CrateTitle is a human-readable title for this crate and can change without any repercussions (i.e. is purely optical)
+                string              CrateTitle                  = 2;
+
+    // CreateID uniquely identifies this crate (for the given crate's publisher/home domain).
+    // Once and ID str is picked out, it cannot change since an asset ref will contain this str.
     //
     // e.g. 
     //    "plan-app"
@@ -101,14 +108,14 @@ message ModuleManifest {
     //    "common"     
     //    "mycology-101"     
     //    "mycology-201"     
-                string              ModuleName                  = 2;
+                string              CreateID                    = 3;
 
-    // ModuleDesc describes this module in a brief phrase
-                string              ModuleDesc                  = 5;
+    // CreateDesc describes this crate in a brief phrase
+                string              CreateDesc                  = 5;
 
-    // BrowserBundle is the name of the bundle containing assets and info used to browse this module.
+    // BrowserBundle is the name of the bundle containing assets and info used to browse this crate.
                 string              BrowserBundle               = 8;
 
-    repeated     BundleManifest     Bundles                     = 10;
+    repeated    BundleManifest      Bundles                     = 10;
 
 }
