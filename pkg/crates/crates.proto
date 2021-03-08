@@ -11,7 +11,11 @@ enum AssetFlags {
     IsTex2D                         = 0x0001;
     IsSprite                        = 0x0002;
     IsMaterial                      = 0x0004;
-    IsPlacable                      = 0x0008;
+    IsPlaceable                     = 0x0008;
+    IsRectTransform                 = 0x0010;
+    
+    // Is UI means that this item is for UI/UX and meets additional requirements.
+    IsUI                            = 0x0020;
 
     // HasIcon means that this Asset includes an icon with the same name (and has IsIcon set),
     HasIcon                         = 0x0100;
@@ -79,7 +83,7 @@ message BundleManifest {
 //
 // A reference to a PLAN asset is via an asset path ID ("PID").
 // An asset PID is a case sensitive POSIX-style pathname having the form:
-//     assetPID := "cratePID/bundlePublicName[.revisionID]/assetName"
+//     assetPID := "cratePID/bundlePublicName[.BuildID]/assetName"
 //
 // where:
 //     cratePID := "homeDomainName/crateID"
@@ -99,7 +103,7 @@ message CrateManifest {
                 string              CrateTitle                  = 2;
 
     // CreateID uniquely identifies this crate (for the given crate's publisher/home domain).
-    // Once and ID str is picked out, it cannot change since an asset ref will contain this str.
+    // This name identifies this crate and is permanent (or else existing path refs will be broken)
     //
     // e.g. 
     //    "plan-app"
@@ -108,7 +112,13 @@ message CrateManifest {
     //    "common"     
     //    "mycology-101"     
     //    "mycology-201"     
-                string              CreateID                    = 3;
+                string              CrateID                     = 3;
+                
+    // BuildID is a short string that identifies a particular crate build/version.
+    // This value should have no spaces and only have '.', '_', or '-' (and should lead with an alpha-numeric)
+    //
+    // e.g.  "2021.1", "10308", "v1.2.0"
+                string              BuildID                     = 4;
 
     // CreateDesc describes this crate in a brief phrase
                 string              CreateDesc                  = 5;
