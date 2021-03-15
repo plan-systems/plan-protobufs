@@ -43,9 +43,9 @@ message AssetEntry {
     // Flags specifies properties about this asset.
                 AssetFlags          AssetFlags                  = 1;
                 string              URI                         = 2;
-                string              Label                       = 3;
-                string              UUID                        = 4;
-
+                string              Title                       = 3;
+                string              NameID                      = 4;
+                
     // CenterX and CenterZ specify the positional center of this asset (and are typically 0).
     // CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
     // Y is considered to be the *vertical* (up) direction and by convention rest on the plane y=0.
@@ -58,6 +58,19 @@ message AssetEntry {
                 float               ExtentsY                    = 11;
                 float               ExtentsZ                    = 12;
 
+    // Not normally persistent and available for dynamic use.
+                string              LocalURI                    = 30;
+
+    // Comma delimited and whitespace-trimmed list of of tags  
+                string              Tags                        = 31;
+
+    // A short phrase or fragment describing this asset, starting with an article where appropriate. e.g.:
+    //      "typical 6 crew member fire truck"
+    //      "leading U.S. naval ship-based helicopter"
+    //      "Texas capital building located in Austin"
+    //      "animated scared-geometry inspired flat seal"
+                string              ShortDesc                   = 32;
+                
     }
 
 
@@ -102,7 +115,7 @@ message CrateManifest {
     // CrateTitle is a human-readable title for this crate and can change without any repercussions (i.e. is purely optical)
                 string              CrateTitle                  = 2;
 
-    // CreateID uniquely identifies this crate (for the given crate's publisher/home domain).
+    // CrateNameID uniquely identifies this crate (for the given crate's publisher/home domain).
     // This name identifies this crate and is permanent (or else existing path refs will be broken)
     //
     // e.g. 
@@ -112,7 +125,7 @@ message CrateManifest {
     //    "common"     
     //    "mycology-101"     
     //    "mycology-201"     
-                string              CrateID                     = 3;
+                string              CrateNameID                 = 3;
                 
     // BuildID is a short string that identifies a particular crate build/version.
     // This value should have no spaces and only have '.', '_', or '-' (and should lead with an alpha-numeric)
