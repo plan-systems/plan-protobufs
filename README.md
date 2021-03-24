@@ -25,12 +25,15 @@ PLAN leverages [Protocol Buffers](https://developers.google.com/protocol-buffers
         `unzip grpc.tools.X.XX.0.nupkg -d plan-systems/plan-protobufs/Grpc.Tools`        
                 
     c. Add execute permissions to for your platform:
-        ```
-        cd plan-systems/plan-protobufs/Grpc.Tools
-        chmod +x tools/macosx_x64/*
-        chmod +x tools/linux_x64/*
-        chmod +x tools/windows_x64/*
-        ```
+    
+    ```bash
+    cd plan-systems/plan-protobufs/Grpc.Tools
+    
+    chmod +x tools/macosx_x64/*
+    chmod +x tools/linux_x64/*
+    chmod +x tools/windows_x64/*
+    ```
+
        
 2. Ensure your `$PATH` contains Go's `bin` directory, e.g. `PATH="${GOPATH}/bin:${PATH}"`
 
