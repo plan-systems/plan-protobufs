@@ -4,7 +4,7 @@ package crates;
 option csharp_namespace = "PlanSDK.Crates";
 
 
-// AssetFlags describes what kind of asset this is.
+
 enum AssetFlags {
     NoFlags                         = 0;
 
@@ -42,8 +42,8 @@ message AssetEntry {
 
     // Flags specifies properties about this asset.
                 AssetFlags          AssetFlags                  = 1;
-                string              URI                         = 2;
-                string              Title                       = 3;
+                string              BrowsePath                  = 2;        // DEPRECATED -- this disappears when we have a real browsing system (vs a HFS/path based system)
+                string              Name                        = 3;
                 string              NameID                      = 4;
                 
     // CenterX and CenterZ specify the positional center of this asset (and are typically 0).
@@ -58,7 +58,7 @@ message AssetEntry {
                 float               ExtentsY                    = 11;
                 float               ExtentsZ                    = 12;
 
-    // Not normally persistent and available for dynamic use.
+    // Ignored; available for dynamic use.
                 string              LocalURI                    = 30;
 
     // Comma delimited and whitespace-trimmed list of of tags  
@@ -76,14 +76,13 @@ message AssetEntry {
 
 message BundleManifest {
 
-                string              ParentCrate                 = 1;
+    // BundleTitle is how the outside world sees this bundle and has no other impact.
+    // This means it can change from build to build and contain any Unicode characters.
+                string              BundleTitle                 = 2;
 
-    // BundlePublicName is how the outside world names this bundle.
-                string              BundlePublicName            = 2;
-
-    // BundleBuildName is how this bundle is internally named.
-	// This corresponds to the asset bundle's file name and is normalized to lower case invariant.
-                string              BundleBuildName             = 3;
+    // BundleNameID is how this bundle is internally identified and expressed the filename of this bundle
+    // This is case sensitive, contains only path-safe characters (sans /:\<>|?*\"), and does not terminate in '.' or whitespace.
+                string              BundleNameID                = 3;
 
     repeated    AssetEntry          Assets                      = 10;
 
@@ -91,31 +90,22 @@ message BundleManifest {
 
 }
 
-// CrateManifest is the top-level manifest/catalog for a PLAN asset module called a "crate".  
-// Is contains catalog and type info that PLAN loads at runtime to know what's inside binary asset bundles without having to load them.
-//
-// A reference to a PLAN asset is via an asset path ID ("PID").
-// An asset PID is a case sensitive POSIX-style pathname having the form:
-//     assetPID := "cratePID/bundlePublicName[.BuildID]/assetName"
-//
-// where:
-//     cratePID := "homeDomainName/crateID"
-//
-message CrateManifest {
 
+// CrateInfo represents a Crate, the fundamental unit of PLAN's asset/package manager. 
+message CrateInfo {
 
-    // DomainName identifies the publisher of this asset crate
+    // InstID is 0 by default and reserved for a runtime manager to reference a crate via issuing integers.
+                int32               InstID                      = 1;
+    
+    // HomeDomain identifies the publisher of this asset crate
     //
     // e.g. 
     //    "plan-systems.org"
     //    "themushroom.farm" 
     //    "the-smiths.family" 
-                string              HomeDomain                  = 1;
+                string              HomeDomain                  = 3;
 
-    // CrateTitle is a human-readable title for this crate and can change without any repercussions (i.e. is purely optical)
-                string              CrateTitle                  = 2;
-
-    // CrateNameID uniquely identifies this crate (for the given crate's publisher/home domain).
+    // NameID uniquely identifies this crate (for the given crate's publisher/home domain).
     // This name identifies this crate and is permanent (or else existing path refs will be broken)
     //
     // e.g. 
@@ -125,20 +115,113 @@ message CrateManifest {
     //    "common"     
     //    "mycology-101"     
     //    "mycology-201"     
-                string              CrateNameID                 = 3;
+                string              NameID                      = 5;
                 
-    // BuildID is a short string that identifies a particular crate build/version.
+    // Title is a human-readable title for this crate and can change without any repercussions (i.e. is purely optical)
+                string              Title                       = 10;
+                
+    // ShortDesc describes this crate in a brief phrase
+                string              ShortDesc                   = 11;         
+                
+    // BrowserBundle is the bundle name ID containing assets and info used to browse this crate.
+                string              BrowserBundleNameID         = 13;
+                
+    // Comma delimited and whitespace-trimmed list of of tags  
+                string              Tags                        = 15;
+                
+    // TimeCreated is UTC value (in seconds) when this crate first created (and does not change)
+                int64               TimeCreated                 = 30;
+
+    // TimeBuilt is UTC value (in seconds) when this crate was built.
+                int64               TimeBuilt                   = 31;
+                
+    // VersionID uniquely identifies this build and has the form "v{MajorNum}.{MinorNum}.{BuildNum}"
+    // e.g. "v1.11.201"
+                int32               MajorVersion                = 40;
+                int32               MinorVersion                = 41;
+                int32               BuildNumber                 = 42;
+                
+    // BuildID uniquely identifies a particular crate build/version.
     // This value should have no spaces and only have '.', '_', or '-' (and should lead with an alpha-numeric)
-    //
-    // e.g.  "2021.1", "10308", "v1.2.0"
-                string              BuildID                     = 4;
-
-    // CreateDesc describes this crate in a brief phrase
-                string              CreateDesc                  = 5;
-
-    // BrowserBundle is the name of the bundle containing assets and info used to browse this crate.
-                string              BrowserBundle               = 8;
-
-    repeated    BundleManifest      Bundles                     = 10;
+    // By convention, the format is "yyMMdd-{VersionID}" (so that sorting by BuildID string yields the most recent release).
+    // e.g. "210320-v0.1.11"
+                string              BuildID                     = 45;
+                
+    // Optional
+    // The expected filename of this crate (sans it platform name and compression extension"{CrateNameID}__{BuildID}__{PlatformID}.zip"
+    // e.g. "drews-crate__210331-v0.1.37__iOS.zip"
+                string              Filename                    = 50;
 
 }
+
+
+
+// CrateManifest is the top-level manifest/catalog for a PLAN asset module called a "crate".  
+// It contains catalog and type info that PLAN loads at runtime to know what's inside binary asset bundles without having to load them.
+//
+// A reference to a PLAN asset is via an asset URI ("PID") having the form:
+//   assetURI := "crateDomainName/crateNameID[@crateBuildID]/assetNameID"
+// 
+message CrateManifest {
+
+                CrateInfo           Info                        = 1;
+    
+    repeated    BundleManifest      Bundles                     = 10;
+}
+
+
+
+// CrateHost represents Crate binary host.
+message CrateHostInfo {
+
+    // Domains is a list of crate home domains that this host is serving.
+    repeated    string              Domains                     = 1;
+                
+    // LatestSnapshotURL is used to get the latest CrateSnapshot
+    // e.g. "http://whatever.com/CrateSnapshot.json"
+    repeated    string              LatestSnapshotURL           = 10;
+
+    // DownloadURLs is a list of mirror URLs that serve a requested crate build
+    // e.g. "http://whatever.com/plan-crates/{CrateDomain}/{CrateNameID}/{CrateBuildID}"
+    repeated    string              DownloadURLs                = 20;
+
+}
+
+
+// message CrateRef {
+
+//     // CrateURI identifies a crate via the form "crateHomeDomain/crateNameID"
+//                 string              CrateURI                    = 1;
+                
+//     // // CrateDomain identifies a crate home domain
+//     //             string              Domain                      = 1;
+                
+//     // // CrateNameID identifies a specific crate in a crate domain
+//     //             string              NameID                      = 2;
+
+//     // CrateBuildID identifies a specific crate by BuildID -- see CrateInfo.BuildID
+//     // If null/empty, the most recent BuildID is implied.
+//                 string              BuildID                     = 3;
+                
+//     // An a zip file name having the form "{CrateNameID}__{BuildID}__{PlatformID}.zip"
+//     // e.g. "drews-crate__210331-v0.1.37.iOS.zip"
+//  //               string              ArchiveName                 = 4;
+
+// }
+
+
+// CrateSnapshot is a general purpose container to track a set crates and associated build IDs.
+message CrateSnapshot {
+
+                int64               RevID                       = 1;
+                
+    // This is a template string where the symbols "CrateDomain", "CrateNameID", "CrateBuildID", "PlatformID" are delimited with { and }.
+    // The symbol "AppStreaming" will be replaced with "file://"
+    // e.g. "http://whatever.com/{CrateDomain}/{CrateNameID}__{CrateBuildID}.{PlatformID}.zip"
+                string              DownloadURL                 = 3;
+                
+    // List of crate build URIs where each has the form "crateDomain/crateNameID/crateBuildID"
+    repeated    string              CrateURIs                   = 5;
+
+}
+
