@@ -1,6 +1,8 @@
 syntax = "proto3";
 package repo;
 
+option csharp_namespace = "PlanSDK.Repo";
+
 
 // High-level channel repository RPC.
 service RepoGrpc {
@@ -65,6 +67,14 @@ enum KeypathScope {
 }
 
 
+enum ResolveMode {
+    Raw                     = 0;
+    ResolveByTime           = 1;
+    ResolveByMemberRank     = 2;
+    ResolveByGrantRank      = 3;
+}
+
+
 // GetOp gets the all the channel entries for the given Keypath and the specified scope.
 message GetOp {
 
@@ -95,6 +105,17 @@ message TxOp {
 
 }
 
+message EnclaveAccess {
+    
+    // Specifies the key pathname for this operation.
+                string              Keypath                     = 1;
+                
+    // This will evolve in time, but in general, the client authenticates by submitting a hash of biometric-based input.
+    // (e.g. pin, password, key-fob, bio-fingerprints) and a token from the previous session.
+    // From this, a symmetric key is (re)created and used to access the member's primary key hive (for the given Keypath)
+                bytes               Passhash                    = 5;
+
+}
 
 // ChReq is generalized request sent from client to server via ServeChannel(). 
 // The client sends a stream of ChReqs and monitors the Nodes that a server sends back to monitor status and completion.
@@ -107,12 +128,12 @@ message ChReq {
     // Node.ReqComplete & ReqDiscarded is how the server signals when this request is considered closed/complete.
                 int32               ReqID                       = 2;
 
-    // URI identifies the channel URI that this ChReq is requesting to access.
-    // Channel URIs take the form of "<DomainName>[/<ChID>[/<StateURI>]]".
+    // ChURI identifies the channel URI that this ChReq is requesting to access.
+    // Channel URIs take the form of "<DomainName>[/<ChID>]".
                 string              ChURI                       = 3;
                 
     // ChStateURI expresses the channel URI that this op applies to.
-    // If not set, it will be set by parsing ChReq.ChURI.
+    // If not set, it will be auto-assigned by parsing ChReq.ChURI.
                 ChStateURI          ChStateURI                  = 4;      
 
     // When ReqOp == ChReqOp.Auto, one of these ops is to be executed.
@@ -152,6 +173,12 @@ enum NodeOp {
     ChSyncResume            = 21;
 
 }
+
+enum NodeScaleMode {
+    AutoScale               = 0;
+    FixedScale              = 1;
+}
+
 
 // Node is the generalized response object a server sends to the client as it processes each ChReq sent by the client. 
 // Node is also the standard "atomic" unit of information in a channel.
@@ -201,24 +228,25 @@ message Node {
     // GlyphURI is a loose analog to the conventional use of "icon" and refer to a unit-sized graphic or volume.
     // Glyph URIs can allow the encoding of arbitrary parameters (such as color), allowing variants to be offered at no cost.
     // A given glyph URI often has both a 2D ("sprite") and 3D object form and is chosen based on where it's instanced.
-                string              GlyphURI                    = 20; 
+                string              GlyphURI                    = 20;   /* DEPRECATED */
+                NodeScaleMode       ScaleMode                   = 21;
 
     // Text is a human readable descriptor for this item, with TextFormat describing what format it's in.
                 string              Text                        = 22;
                 TextFormat          TextFormat                  = 23;
 
-    // Optional values that can express needed values in accordance of TypeID .
+    // Optional values that can express needed values in accordance of TypeID.
                 string              Str                         = 24; 
                 int64               Int                         = 25;
 
     // Attachment is useful to attach any buffer, typically decoded based on Node.Op, Node.Keypath, or Node.TypeID.
-    // Max size is limited to 3MB.
+    // Max size is limited to ~ 3.5MB.
                 bytes               Attachment                  = 30;
                 
     // AssetURI specifies an asset URI (typically implicitly placed at this node's position, scale, and orientation.
     // Asset URIs allow the encoding of arbitrary parameters (such as color), allowing variants to be offered at no cost.
-                string              AssetURI                    = 35; 
-
+                string              AssetURI                    = 35;
+                
     // X1, X2, and X3 are coordinates or values expressed in any unit.
     // A channel client can later declare how to interpret these coordinates so that a channel server and provide indexed services.
     // Shoutout to the 3 domains that reflect all theoretical completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s).
@@ -288,7 +316,7 @@ message ReqErr {
 }
 
 
-// Tx contains all the info for a channel URI change.
+// Tx contains all the info for a channel changeset.
 // TODO -- this is a short-term workaround to get things running and it contents will be replaced with proper fields.
 message Tx {
 
@@ -346,30 +374,3 @@ enum TxnStatus {
     
 }
 
-// OrgFlags is for minor UX adaptations in default naming, nomenclature, and phraseology.
-enum OrgFlags {
-    IsCommunity                 = 0;
-
-    IsLegalOrg                  = 0x0001;
-    IsCompany                   = 0x0002;
-    IsFederation                = 0x0004;
-    IsPersonal                  = 0x0010;
-}
-
-
-message OrgInfo {
-
-                string              CommonName                  = 1;
-                string              FormalName                  = 2;
-    repeated    string              DomainNames                 = 3;
-
-                OrgFlags            OrgFlags                    = 10;
-                string              GenesisTID                  = 11;
-
-}
-
-
-
-// Reserved Keypath symbols used within ChEntry.Keypath during ChReqOp.Put
-// $SELF_UUID       -- inserts an ID that reflects a unique ID associated with the current 
-// $ITEM_UUID       -- inserts a newly generated inque value 
