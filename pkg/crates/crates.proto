@@ -71,7 +71,7 @@ message AssetEntry {
     //      "animated scared-geometry inspired flat seal"
                 string              ShortDesc                   = 32;
                 
-    }
+}
 
 
 message BundleManifest {
@@ -91,20 +91,32 @@ message BundleManifest {
 }
 
 
+// CrateSchema helps future-proof against breaking changes down the road.
+// Enum values should be the last two digits of the release year and a revision digit.
+enum CrateSchema {
+    UndefinedSchema                 = 0;
+    Crates2021                      = 210;
+}
+
+
 // CrateInfo represents a Crate, the fundamental unit of PLAN's asset/package manager. 
 message CrateInfo {
 
+    // CrateSchema communicates which build and packaging schema was used for this crate build.
+    // This value should be the integer value of a valid CrateSchema enum.
+                int32               CrateSchema                 = 1;
+                
     // InstID is 0 by default and reserved for a runtime manager to reference a crate via issuing integers.
     // If non-zero, it will not change and no other instance will have the same value.
-                uint32              InstID                      = 1;
+                uint32              InstID                      = 2;
     
-    // HomeDomain identifies the publisher of this asset crate
+    // HomeDomain identifies the publisher of this asset crate and  double 
     //
     // e.g. 
     //    "plan-systems.org"
     //    "themushroom.farm" 
     //    "the-smiths.family" 
-                string              HomeDomain                  = 3;
+                string              HomeDomain                  = 6;
 
     // NameID uniquely identifies this crate (for the given crate's publisher/home domain).
     // This name identifies this crate and is permanent (or else existing path refs will be broken)
@@ -116,7 +128,7 @@ message CrateInfo {
     //    "common"     
     //    "mycology-101"     
     //    "mycology-201"     
-                string              NameID                      = 5;
+                string              NameID                      = 7;
                 
     // Title is a human-readable title for this crate and can change without any repercussions (i.e. is purely optical)
                 string              Title                       = 10;
@@ -145,8 +157,11 @@ message CrateInfo {
     // e.g. "210320-v0.1.11"
                 string              BuildID                     = 45;
                 
-    // URL is an optional string available to specifying a means to access this crate.
-                string              URL                         = 50;
+    // HomeURL is an optional link that allows a human to learn more about this crate.
+                string              HomeURL                     = 50;
+
+    // URL is an optional string available to specifying URL to download this crate.
+                string              URL                         = 55;
 
 }
 
