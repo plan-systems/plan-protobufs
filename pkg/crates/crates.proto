@@ -95,7 +95,8 @@ message BundleManifest {
 message CrateInfo {
 
     // InstID is 0 by default and reserved for a runtime manager to reference a crate via issuing integers.
-                int32               InstID                      = 1;
+    // If non-zero, it will not change and no other instance will have the same value.
+                uint32              InstID                      = 1;
     
     // HomeDomain identifies the publisher of this asset crate
     //
@@ -123,9 +124,6 @@ message CrateInfo {
     // ShortDesc describes this crate in a brief phrase
                 string              ShortDesc                   = 11;         
                 
-    // BrowserBundle is the bundle name ID containing assets and info used to browse this crate.
-                string              BrowserBundleNameID         = 13;
-                
     // Comma delimited and whitespace-trimmed list of of tags  
                 string              Tags                        = 15;
                 
@@ -142,15 +140,13 @@ message CrateInfo {
                 int32               BuildNumber                 = 42;
                 
     // BuildID uniquely identifies a particular crate build/version.
-    // This value should have no spaces and only have '.', '_', or '-' (and should lead with an alpha-numeric)
+    // This value should have no spaces and only have '.', '_', or '-' (and starts and ends with an alpha-numeric)
     // By convention, the format is "yyMMdd-{VersionID}" (so that sorting by BuildID string yields the most recent release).
     // e.g. "210320-v0.1.11"
                 string              BuildID                     = 45;
                 
-    // Optional
-    // The expected filename of this crate (sans it platform name and compression extension"{CrateNameID}__{BuildID}__{PlatformID}.zip"
-    // e.g. "drews-crate__210331-v0.1.37__iOS.zip"
-                string              Filename                    = 50;
+    // URL is an optional string available to specifying a means to access this crate.
+                string              URL                         = 50;
 
 }
 
@@ -165,49 +161,14 @@ message CrateInfo {
 message CrateManifest {
 
                 CrateInfo           Info                        = 1;
-    
+                
+    // IconBundleName is the bundle name ID of the bundle containing icons (Sprites) used to represent the "real" crate assets.
+    // Asset name IDs in this bundle correspond to assets in all the other Crate's bundles.
+                string              IconBundleName              = 5;
+                
     repeated    BundleManifest      Bundles                     = 10;
 }
 
-
-
-// CrateHost represents Crate binary host.
-message CrateHostInfo {
-
-    // Domains is a list of crate home domains that this host is serving.
-    repeated    string              Domains                     = 1;
-                
-    // LatestSnapshotURL is used to get the latest CrateSnapshot
-    // e.g. "http://whatever.com/CrateSnapshot.json"
-    repeated    string              LatestSnapshotURL           = 10;
-
-    // DownloadURLs is a list of mirror URLs that serve a requested crate build
-    // e.g. "http://whatever.com/plan-crates/{CrateDomain}/{CrateNameID}/{CrateBuildID}"
-    repeated    string              DownloadURLs                = 20;
-
-}
-
-
-// message CrateRef {
-
-//     // CrateURI identifies a crate via the form "crateHomeDomain/crateNameID"
-//                 string              CrateURI                    = 1;
-                
-//     // // CrateDomain identifies a crate home domain
-//     //             string              Domain                      = 1;
-                
-//     // // CrateNameID identifies a specific crate in a crate domain
-//     //             string              NameID                      = 2;
-
-//     // CrateBuildID identifies a specific crate by BuildID -- see CrateInfo.BuildID
-//     // If null/empty, the most recent BuildID is implied.
-//                 string              BuildID                     = 3;
-                
-//     // An a zip file name having the form "{CrateNameID}__{BuildID}__{PlatformID}.zip"
-//     // e.g. "drews-crate__210331-v0.1.37.iOS.zip"
-//  //               string              ArchiveName                 = 4;
-
-// }
 
 
 // CrateSnapshot is a general purpose container to track a set crates and associated build IDs.
@@ -220,8 +181,7 @@ message CrateSnapshot {
     // e.g. "http://whatever.com/{CrateDomain}/{CrateNameID}__{CrateBuildID}.{PlatformID}.zip"
                 string              DownloadURL                 = 3;
                 
-    // List of crate build URIs where each has the form "crateDomain/crateNameID/crateBuildID"
-    repeated    string              CrateURIs                   = 5;
+    repeated    CrateInfo           Crates                      = 10;
 
 }
 
