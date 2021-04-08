@@ -92,10 +92,10 @@ message BundleManifest {
 
 
 // CrateSchema helps future-proof against breaking changes down the road.
-// Enum values should be the last two digits of the release year and a revision digit.
+// Enum values should be three base10 digits corresponding to the major, minor, and revision number.
 enum CrateSchema {
     UndefinedSchema                 = 0;
-    Crates2021                      = 210;
+    Crates_v100                     = 100;
 }
 
 
