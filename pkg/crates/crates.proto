@@ -44,7 +44,7 @@ message AssetEntry {
                 AssetFlags          AssetFlags                  = 1;
                 string              BrowsePath                  = 2;        // DEPRECATED -- this disappears when we have a real browsing system (vs a HFS/path based system)
                 string              Name                        = 3;
-                string              NameID                      = 4;
+                string              AssetID                     = 4;
                 
     // CenterX and CenterZ specify the positional center of this asset (and are typically 0).
     // CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
@@ -111,10 +111,10 @@ message CrateInfo {
     // If non-zero, it will not change and no other instance will have the same value.
                 uint32              InstID                      = 2;
                 
-    // CrateURI takes the form "{PublisherID}/{CrateNameID}" is used to globally reference assets in this crate.
+    // CrateURI takes the form "{PublisherID}/{CrateID}" is used to globally reference assets in this crate.
     // This URI string can only contains chars in [A-Za-z0-9_.-] (other than the separating '/' char). 
     // PublisherID uniquely identifies the author/owner/publisher of this crate (and potentially other crates).
-    // CrateNameID uniquely identifies this crate for the given publisher and all subsequent revisions.
+    // CrateID uniquely identifies this crate for the given publisher and all subsequent revisions.
     //    "plan-systems.org/plan.app.ui"
     //    "plan-systems.org/about-plan-systems"
     //    "themushroom.farm/land" 
@@ -166,7 +166,7 @@ message CrateInfo {
 // It contains catalog and type info that PLAN loads at runtime to know what's inside binary asset bundles without having to load them.
 //
 // A reference to a PLAN asset is via a URI with the form:
-//   assetURI := "PublisherID/CrateNameID[@CrateBuildID]/AssetNameID"
+//   assetURI := "PublisherID/CrateID[@CrateBuildID]/AssetID"
 // 
 message CrateManifest {
 
