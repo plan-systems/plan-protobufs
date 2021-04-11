@@ -29,6 +29,7 @@ enum Const {
     TIDSz                   = 30;
 
     // TIDEncodedLen is the ASCII-compatible string length of a (binary) TID encoded into its base32 form.
+    // The encoding used is the geohash base32 alphabet, so that even ascii ordinal string comparisons will correctly sort encoded TIDs by time.
     TIDEncodedLen           = 48;
 
     // TIDTimestampSz is the number of left-hand bytes in a TID reserved for a time index value.
