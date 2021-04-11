@@ -65,10 +65,10 @@ message AssetEntry {
                 string              Tags                        = 31;
 
     // A short phrase or fragment describing this asset, starting with an article where appropriate. e.g.:
-    //      "typical 6 crew member fire truck"
-    //      "leading U.S. naval ship-based helicopter"
-    //      "Texas capital building located in Austin"
-    //      "animated scared-geometry inspired flat seal"
+    //      "A typical 6 crew member fire truck"
+    //      "A leading U.S. naval ship-based helicopter"
+    //      "The Texas capital building located in Austin"
+    //      "An animated scared-geometry inspired flat seal"
                 string              ShortDesc                   = 32;
                 
 }
@@ -91,47 +91,42 @@ message BundleManifest {
 }
 
 
-// CrateSchema helps future-proof against breaking changes down the road.
 // Enum values should be three base10 digits corresponding to the major, minor, and revision number.
 enum CrateSchema {
-    UndefinedSchema                 = 0;
-    Crates_v100                     = 100;
+    UndefinedSchema         = 0;
+    
+    // v100 (April 2020) should be used for CrateInfo.CrateSchema
+    v100                    = 100;
 }
 
 
 // CrateInfo represents a Crate, the fundamental unit of PLAN's asset/package manager. 
 message CrateInfo {
 
-    // CrateSchema communicates which build and packaging schema was used for this crate build.
-    // This value should be the integer value of a valid CrateSchema enum.
+    // CrateSchema communicates which build and packaging schema was used for this crate build .
+    // This value should be the integer value of a valid CrateSchema.vNNN enum.
                 int32               CrateSchema                 = 1;
                 
     // InstID is 0 by default and reserved for a runtime manager to reference a crate via issuing integers.
     // If non-zero, it will not change and no other instance will have the same value.
                 uint32              InstID                      = 2;
-    
-    // HomeDomain identifies the publisher of this asset crate and  double 
-    //
-    // e.g. 
-    //    "plan-systems.org"
-    //    "themushroom.farm" 
-    //    "the-smiths.family" 
-                string              HomeDomain                  = 6;
-
-    // NameID uniquely identifies this crate (for the given crate's publisher/home domain).
-    // This name identifies this crate and is permanent (or else existing path refs will be broken)
-    //
-    // e.g. 
-    //    "plan-app"
-    //    "about-plan-systems"
-    //    "welcome-to-plan"
-    //    "common"     
-    //    "mycology-101"     
-    //    "mycology-201"     
-                string              NameID                      = 7;
                 
-    // Title is a human-readable title for this crate and can change without any repercussions (i.e. is purely optical)
-                string              Title                       = 10;
+    // CrateURI takes the form "{PublisherID}/{CrateNameID}" is used to globally reference assets in this crate.
+    // This URI string can only contains chars in [A-Za-z0-9_.-] (other than the separating '/' char). 
+    // PublisherID uniquely identifies the author/owner/publisher of this crate (and potentially other crates).
+    // CrateNameID uniquely identifies this crate for the given publisher and all subsequent revisions.
+    //    "plan-systems.org/plan.app.ui"
+    //    "plan-systems.org/about-plan-systems"
+    //    "themushroom.farm/land" 
+    //    "themushroom.farm/mycology-201" 
+    //    "the-smiths.family/123-Maple" 
+                string              CrateURI                    = 4;
+                
+    // PublisherName is a human-readable of the author/owner/publisher of this crate and can change without repercussions (i.e. is purely optical).
+                string              PublisherName               = 6;
+                
+    // CrateName is a human-readable title for this crate and can change without repercussions.
+                string              CrateName                   = 10;
                 
     // ShortDesc describes this crate in a brief phrase
                 string              ShortDesc                   = 11;         
@@ -170,8 +165,8 @@ message CrateInfo {
 // CrateManifest is the top-level manifest/catalog for a PLAN asset module called a "crate".  
 // It contains catalog and type info that PLAN loads at runtime to know what's inside binary asset bundles without having to load them.
 //
-// A reference to a PLAN asset is via an asset URI ("PID") having the form:
-//   assetURI := "crateDomainName/crateNameID[@crateBuildID]/assetNameID"
+// A reference to a PLAN asset is via a URI with the form:
+//   assetURI := "PublisherID/CrateNameID[@CrateBuildID]/AssetNameID"
 // 
 message CrateManifest {
 
@@ -191,9 +186,10 @@ message CrateSnapshot {
 
                 int64               RevID                       = 1;
                 
-    // This is a template string where the symbols "CrateDomain", "CrateNameID", "CrateBuildID", "PlatformID" are delimited with { and }.
-    // The symbol "AppStreaming" will be replaced with "file://"
-    // e.g. "http://whatever.com/{CrateDomain}/{CrateNameID}__{CrateBuildID}.{PlatformID}.zip"
+    // This is a template string where the symbols "CrateURI", "CrateBuildID", "PlatformID" are delimited with { and }.
+    // The symbol "{.}" is be replaced with a local pathname if the URL refers to a local file system pathname.
+    // e.g. "http://whatever.com/{CrateURI}__{CrateBuildID}.{PlatformID}.zip"
+    //      "{.}/{CrateURI}__{CrateBuildID}.{PlatformID}.zip"
                 string              DownloadURL                 = 3;
                 
     repeated    CrateInfo           Crates                      = 10;
