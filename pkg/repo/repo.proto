@@ -89,6 +89,7 @@ message GetOp {
 }
 
 
+
 // TxOp atomically commits Entries[] (patches) to the given channel URI
 // In the corresponding reply ReqComplete message, Node.Attachment is set to the resulting TxID.
 message TxOp {
@@ -236,7 +237,7 @@ message Node {
                 string              Text                        = 22;
                 TextFormat          TextFormat                  = 23;
 
-    // Optional values that can express needed values in accordance of TypeID.
+    // Optional values that can express needed values in accordance with TypeID.
                 string              Str                         = 24; 
                 int64               Int                         = 25;
 
@@ -375,3 +376,21 @@ enum TxnStatus {
     
 }
 
+
+message VarEntry {
+
+    // Keypath is a case-sensitive POSIX-style pathname
+                string              Key                         = 1;
+                
+    // TypeID is an optional "multi-codec" style (POSIX-style type pathname) that self-describes this Node and the information within it. 
+                string              TypeID                      = 5;         
+
+    // A value that can express needed values in accordance with TypeID.
+                string              Val                         = 20; 
+}
+
+
+// Environment wraps a set of arbitrary definitions for general purpose use.
+message VarSpace {
+    repeated    VarEntry            Defs                        = 5;
+}
