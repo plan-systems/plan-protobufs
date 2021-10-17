@@ -190,7 +190,8 @@ message CrateSnapshot {
     // The symbol "{.}" is to be replaced with a local pathname if the URL refers to a local file system pathname.
     // e.g. "http://whatever.com/{CrateURI}__{CrateBuildID}.{PlatformID}.crate"
     //      "{.}/{CrateURI}__{CrateBuildID}.{PlatformID}.crate"
-                string              CrateURL                    = 3;
+                string              DownloadURL                 = 3;
+               // string              CrateURL                    = 3;      // TODO: rename this field
                 
     repeated    CrateInfo           Crates                      = 10;
 
