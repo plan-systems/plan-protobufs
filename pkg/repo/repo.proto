@@ -376,21 +376,3 @@ enum TxnStatus {
     
 }
 
-
-message VarEntry {
-
-    // Keypath is a case-sensitive POSIX-style pathname
-                string              Key                         = 1;
-                
-    // TypeID is an optional "multi-codec" style (POSIX-style type pathname) that self-describes this Node and the information within it. 
-                string              TypeID                      = 5;         
-
-    // A value that can express needed values in accordance with TypeID.
-                string              Val                         = 20; 
-}
-
-
-// Environment wraps a set of arbitrary definitions for general purpose use.
-message VarSpace {
-    repeated    VarEntry            Defs                        = 5;
-}
