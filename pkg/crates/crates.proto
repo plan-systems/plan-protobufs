@@ -38,6 +38,35 @@ enum AssetFlags {
 
 
 
+
+message OrgVars {
+    // OrgDomain is the domain name associated with this org (e.g. "blockcities.plan.tools") 
+                string              OrgDomain                   = 2;
+                
+    // OrgName is the human readable name of this org and is purely cosmetic
+                string              OrgName                     = 4;
+                
+    // OrgHomeURL is the home link for this org (e.g. "https://blockcities.com")
+                string              OrgHomeURL                  = 6;
+                
+    // LinkDesc describes a link into this org and is for humans.
+                string              LinkDesc                    = 8;
+                
+    // HomeChID is a plan URI to the org's default home channel
+                string              HomeChID                    = 10;
+                
+    // AppHomeURL points to the home URL for the app 
+                string              AppHomeURL                  = 12;
+                
+    // CrateSnapshotURL specifies where to load this org's CrateSnapshot
+                string              CrateSnapshotURL            = 14;
+                
+    // AppDownloadURLs are a download URL for a given platform.
+    // A key of "" denotes an unknown platform
+                map<string, string> AppDownloadURLs             = 16;
+}
+
+
 message AssetEntry {
 
     // Flags specifies properties about this asset.
