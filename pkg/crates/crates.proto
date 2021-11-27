@@ -36,7 +36,11 @@ enum AssetFlags {
 
 }
 
-
+// KVEntry is a generic entry for any key-value pair.
+message KVEntry {
+                string              Key                         = 1;
+                string              Value                       = 2;
+}
 
 
 message AppVars {
@@ -61,7 +65,9 @@ message AppVars {
                 
     // Overrides default settings
                 map<string, string> Settings                    = 20;
-
+                
+    // Links is a list of channel URIs for easy access.
+    repeated    KVEntry             Links                       = 30;
 
 }
 
