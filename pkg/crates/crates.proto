@@ -67,7 +67,7 @@ message AppVars {
                 map<string, string> Settings                    = 20;
                 
     // Links is a list of channel URIs for easy access.
-    repeated    KVEntry             Links                       = 30;
+    repeated    KVEntry             Links                       = 40;
 
 }
 
