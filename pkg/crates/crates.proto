@@ -36,25 +36,23 @@ enum AssetFlags {
 
 }
 
+// KVEntry is a generic entry for any key-value pair.
+message KVEntry {
+                string              Key                         = 1;
+                string              Value                       = 2;
+}
 
 
-
-message OrgVars {
-    // OrgDomain is the domain name associated with this org (e.g. "blockcities.plan.tools") 
-                string              OrgDomain                   = 2;
+message AppVars {
+    // HostName is the domain name used for primary queries (e.g. "blockcities.plan.tools") 
+                string              HostDomain                  = 2;
                 
-    // OrgName is the human readable name of this org and is purely cosmetic
-                string              OrgName                     = 4;
+    // LinkDesc describes a link into this org and is for humans.
+                string              AppDesc                     = 4;
                 
     // OrgHomeURL is the home link for this org (e.g. "https://blockcities.com")
                 string              OrgHomeURL                  = 6;
-                
-    // LinkDesc describes a link into this org and is for humans.
-                string              LinkDesc                    = 8;
-                
-    // HomeChID is a plan URI to the org's default home channel
-                string              HomeChID                    = 10;
-                
+
     // AppHomeURL points to the home URL for the app 
                 string              AppHomeURL                  = 12;
                 
@@ -64,6 +62,13 @@ message OrgVars {
     // AppDownloadURLs are a download URL for a given platform.
     // A key of "" denotes an unknown platform
                 map<string, string> AppDownloadURLs             = 16;
+                
+    // Overrides default settings
+                map<string, string> Settings                    = 20;
+                
+    // Links is a list of channel URIs for easy access.
+    repeated    KVEntry             Links                       = 40;
+
 }
 
 
