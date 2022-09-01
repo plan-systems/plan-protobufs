@@ -191,6 +191,9 @@ message CrateInfo {
 
     // URL is an optional string available to specifying URL to download this crate.
                 string              URL                         = 55;
+                
+    // Approximate size of this crate in bytes (or 0 if unknown)
+                int64               ApproxSize                  = 60;
 
 }
 
