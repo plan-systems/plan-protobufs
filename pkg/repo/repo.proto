@@ -335,7 +335,7 @@ message Tx {
 // ChStateURI fully specifies a channel URI at a given state.
 message ChStateURI {
 
-                // DomainName specifies the parent community/context name of the given channel ID.  Domain names are how 
+                // DomainName specifies the parent community/org/context name of the given channel ID.  Domain names are how 
                 // channel syndication properties, storage quotas, and prioritization are possible at the vault level.  
                 string              DomainName                  = 1;
 
