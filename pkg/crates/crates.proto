@@ -228,7 +228,6 @@ message CrateSnapshot {
     // e.g. "http://whatever.com/{CrateURI}__{CrateBuildID}.{PlatformID}.crate"
     //      "{.}/{CrateURI}__{CrateBuildID}.{PlatformID}.crate"
                 string              DownloadURL                 = 3;
-               // string              CrateURL                    = 3;      // TODO: rename this field
                 
     repeated    CrateInfo           Crates                      = 10;
 
